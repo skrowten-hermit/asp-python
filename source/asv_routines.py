@@ -1,4 +1,4 @@
-##Audio & Speech Verification routines
+##Audio & Speech Verification routines, base version
 
 
 ### From snack_operations
