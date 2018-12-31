@@ -100,12 +100,13 @@ class DTMFdetector(object):
         self.MAX_BINS = 8
         #16kHz
         if pfreq == 16000:
-                self.GOERTZEL_N = 210
-                self.SAMPLING_RATE = 16000
+            #16kHz samples
+            self.GOERTZEL_N = 210
+            self.SAMPLING_RATE = 16000
         else:
-                self.GOERTZEL_N = 92
-                self.SAMPLING_RATE = 8000
-        #8kHz default
+            #8kHz samples (default)
+            self.GOERTZEL_N = 92
+            self.SAMPLING_RATE = 8000
 
         #the DTMF frequencies we're looking for
         self.freqs = [697, 770, 852, 941, 1209, 1336, 1477, 1633]
@@ -357,14 +358,20 @@ class DTMFdetector(object):
 
 
 
+freq = 8000
+debug = 1
+seq = "1590"
 
+dtmf = DTMFdetector(freq, debug)
 
+data1 = dtmf.getDTMFfromWAV(b1_b2_audio)
+data2 = dtmf.getDTMFfromWAV(b2_b1_audio)
+TEST_CASE_RESULT_B1_B2 = 'Pass' if data1 == seq else 'DTMF Fail'
+TEST_CASE_RESULT_B2_B1 = 'Pass' if data2 == seq else 'DTMF Fail'
+digit1 = [x == y for (x, y) in zip(seq, data1)].count(True)
+digit2 = [x == y for (x, y) in zip(seq, data2)].count(True)
 
-# dtmf = DTMFdetector(self.WB_Freq, self.DEBUG)
-#
-# data1 = dtmf.getDTMFfromWAV(b1_b2_audio)
-# data2 = dtmf.getDTMFfromWAV(b2_b1_audio)
-# TEST_CASE_RESULT_B1_B2 = 'Pass' if data1 == self.board2.seq else 'DTMF Fail'
-# TEST_CASE_RESULT_B2_B1 = 'Pass' if data2 == self.board1.seq else 'DTMF Fail'
-# digit1 = [x == y for (x, y) in zip(self.board2.seq, data1)].count(True)
-# digit2 = [x == y for (x, y) in zip(self.board1.seq, data2)].count(True)
+print "Result 1 : ", TEST_CASE_RESULT_B1_B2
+print "Digits 1 : ", digit1
+print "Result 2 : ", TEST_CASE_RESULT_B2_B1
+print "Digits 2 : ", digit2
