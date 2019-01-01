@@ -1,17 +1,36 @@
-##############################################
-## Modified by: David Luu
-## Last modified: 10/24/2010
+################################################################################################################
+################################################################################################################
+##                                                                                                            ##
+##                                                                                                            ##
+##                                          DTMFDetector                                                      ##
+##                                                                                                            ##
+##                                                                                                            ##
+################################################################################################################
+################################################################################################################
+##
+## Modified by      : Sreekanth Sreekumar
+## Last modified    : 01/01/2019
+## Changes Made     : SWB inputs support added and tested.
+## Changes Details  : Expanded the program to support input wave files sampled at 24 kHz, 32 kHz and 48 kHz,
+##                    besides the already supported 8 kHz and 16 kHz inputs. Inputs which are 16-bit PCM,
+##                    single channel (mono channel) are known to work well with this particular program. As
+##                    the other authors (David Luu and John Etherton, see below) have pointed out, feel free.
+##                    Anyone can go ahead and play around a bit with the code and the inputs. and make changes.
+##
+################################################################################################################
+################################################################################################################
+##
+## Modified by      : David Luu
+## Last modified    : 10/24/2010
 ##
 ## NOTE: website below incorrect, updated one is
 ## http://johnetherton.com/projects/pys60-dtmf-detector
 ##
 ## Original code info:
-##
-## last updated: 2/2/2007
+## Last Updated     : 02/02/2007
 ##
 ## This is written by John Etherton - john@johnetherton.com
 ## http://johnetherton.com/programming/DTMFdetect/
-##
 ##
 ## Please send me any questions or comments about this code.
 ## I made this so I could do DTMF detection with python on a
@@ -41,7 +60,7 @@
 ##
 ## -Assume we have a single channel 16 bit, 8000hz file "audioFile.wav"
 ## -that was recorded on a phone when someone pressed 8,3,3,4,5
-## CODE:
+## CODE (for usage) :
 ##    from DTMFdetector import DTMFdetector
 ##    dtmf = DTMFdetector()
 ##    data = dtmf.getDTMFfromWAV("audioFile.wav")
@@ -52,7 +71,11 @@
 ## It's that simple
 ##
 ## Oh and I can't spell so please forgive all my mistakes
-##############################################
+##
+################################################################################################################
+################################################################################################################
+
+
 
 import chunk
 import wave
@@ -60,18 +83,21 @@ import struct
 import math
 
 
-###############################################
-## This class is used to detect DTMF tones in a WAV file
+################################################################################################################
 ##
-## Currently this only works with uncompressed .WAV files
-## encoded 16 bits per channel, one channel, at 8000 hertz.
-## I know if I tried I could make this so it'd work with
-## other sampling rates and such, but this is how PyS60 records
-## audio and I've got a bunch of other things to work on right
-## now. If you want to add this functionality please go ahead
-## and do it
+## Class Summary        : This class is used to detect DTMF tones in a WAV file
+##
+## Class Description    : Currently this only works with uncompressed .WAV files. encoded 16 bits per channel,
+##                        one channel, at 8000 hertz. I know if I tried I could make this so it'd work with
+##                        other sampling rates and such, but this is how PyS60 records audio and I've got a
+##                        bunch of other things to work on right now. If you want to add this functionality
+##                        please go ahead and do it.
+##
+################################################################################################################
+
 class DTMFdetector(object):
-###########################################
+
+################################################################################################################
 ## The default constructor
 ##
 ## initializes the instance variables
@@ -88,18 +114,31 @@ class DTMFdetector(object):
 ##    self.coefs = [0, 0, 0, 0, 0, 0, 0, 0]
 ##    self.reset()
 ##    self.calc_coeffs()
-###########################################
-## Custom constructor, added for support
-## of additional audio file formats
-##
-## initializes the instance variables
-## pre-calculates the coefficients
-    def __init__(self,pfreq,pdebug):
-#DEFINE SOME CONSTANTS FOR THE
-#GOERTZEL ALGORITHM
+################################################################################################################
+
+
+################################################################################################################
+## Custom constructor, added for support of additional audio file formats
+## Initializes the instance variables and pre-calculates the coefficients
+################################################################################################################
+
+    def __init__(self, pfreq, pdebug):
+#DEFINE SOME CONSTANTS FOR THE GOERTZEL ALGORITHM
         self.MAX_BINS = 8
-        #16kHz
-        if pfreq == 16000:
+
+        if pfreq == 48000:
+            #48kHz samples
+            self.GOERTZEL_N = 630
+            self.SAMPLING_RATE = 48000
+        elif pfreq == 32000:
+            #32kHz samples
+            self.GOERTZEL_N = 420
+            self.SAMPLING_RATE = 32000
+        elif pfreq == 24000:
+            #24kHz samples
+            self.GOERTZEL_N = 315
+            self.SAMPLING_RATE = 24000
+        elif pfreq == 16000:
             #16kHz samples
             self.GOERTZEL_N = 210
             self.SAMPLING_RATE = 16000
@@ -108,10 +147,12 @@ class DTMFdetector(object):
             self.GOERTZEL_N = 92
             self.SAMPLING_RATE = 8000
 
-        #the DTMF frequencies we're looking for
+# The following are the DTMF frequencies that we're looking for
+
         self.freqs = [697, 770, 852, 941, 1209, 1336, 1477, 1633]
 
-        #the coefficients
+# The coefficients
+
         self.coefs = [0, 0, 0, 0, 0, 0, 0, 0]
 
         self.reset()
@@ -121,36 +162,37 @@ class DTMFdetector(object):
         self.debug = pdebug
 
 
-   ###########################################
-   ## This will reset all the state of the detector
+################################################################################################################
+## This will reset all the state of the detector
+################################################################################################################
+
     def reset(self):
-        #the index of the current sample being looked at
+# The index of the current sample being looked at
         self.sample_index = 0
 
-        #the counts of samples we've seen
+# The counts of samples we've seen
         self.sample_count = 0
 
-        #first pass
+# The first pass
         self.q1 = [0, 0, 0, 0, 0, 0, 0, 0]
 
-        #second pass
+# The second pass
         self.q2 = [0, 0, 0, 0, 0, 0, 0, 0]
 
-        #r values
+# The r values
         self.r = [0, 0, 0, 0, 0, 0, 0, 0]
 
-        #this stores the characters seen so far
-        #and the times they were seen at for
-        #post, post processing
+# This stores the characters seen so far and the times they were seen at for post, post processing
         self.characters = []
 
-        #this stores the final string of characters
-        #we believe the audio contains
+# This stores the final string of characters we believe the audio contains
         self.charStr = ""
 
-   ###########################################
-   ## Post testing for algorithm
-   ## figures out what's a valid signal and what's not
+
+################################################################################################################
+## Post testing for algorithm figures out what's a valid signal and what's not
+################################################################################################################
+
     def post_testing(self):
         row = 0
         col = 0
@@ -162,15 +204,15 @@ class DTMFdetector(object):
         i = 0
         msg = "none"
 
-        row_col_ascii_codes = [["1", "2", "3", "A"],["4", "5", "6", "B"],["7", "8", "9", "C"],["*", "0", "#", "D"]]
+        row_col_ascii_codes = [["1", "2", "3", "A"], ["4", "5", "6", "B"], ["7", "8", "9", "C"], ["*", "0", "#", "D"]]
 
-        #Find the largest in the row group.
+# Find the largest in the row group.
         for i in range(4):
             if self.r[i] > maxval:
                 maxval = self.r[i]
                 row = i
 
-        #Find the largest in the column group.
+# Find the largest in the column group.
         col = 4
         maxval = 0
         for i in range(4,8):
@@ -178,7 +220,7 @@ class DTMFdetector(object):
                 maxval = self.r[i]
                 col = i
 
-        #Check for minimum energy
+# Check for minimum energy
         if self.r[row] < 4.0e5:
             msg = "energy not enough"
         elif self.r[col] < 4.0e5:
@@ -186,21 +228,21 @@ class DTMFdetector(object):
         else:
             see_digit = True
 
-            #Normal twist
+# Normal twist
             if self.r[col] > self.r[row]:
                 max_index = col
                 if self.r[row] < (self.r[col] * 0.398):
                     see_digit = False
-            #Reverse twist
+# Reverse twist
             else:
                 max_index = row
                 if self.r[col] < (self.r[row] * 0.158):
                     see_digit = False
 
-         #signal to noise test
-         #AT&T states that the noise must be 16dB down from the signal.
-         # Here we count the number of signals above the threshold and
-         #there ought to be only two.
+# Signal to noise test:
+# AT&T states that the noise must be 16dB down from the signal.
+# Here we count the number of signals above the threshold and there ought to be only two.
+
         if self.r[max_index] > 1.0e9:
             t = self.r[max_index] * 0.158
         else:
@@ -219,27 +261,23 @@ class DTMFdetector(object):
         if see_digit:
             if self.debug:
                 print row_col_ascii_codes[row][col-4] #for debugging
-            #stores the character found, and the time in the file in seconds in which the file was found
+# Stores the character found, and the time in the file in seconds in which the file was found
             self.characters.append((row_col_ascii_codes[row][col-4], float(self.sample_index) / float(self.SAMPLING_RATE)))
 
 
-   ###########################################
-   ## This takes the number of characters found and such and
-   ## figures out what's a distinct key press.
-   ##
-   ## So say you pressed 5,3,2,1,1
-   ## The algorithm sees 555553222233333221111111111111
-   ## Cleaning up gives you 5,3,2,1,1
+################################################################################################################
+## This takes the number of characters found and such and figures out what's a distinct key press.
+## So say you pressed 5,3,2,1,1
+## The algorithm sees 555553222233333221111111111111
+## Cleaning up gives you 5,3,2,1,1
+################################################################################################################
+
     def clean_up_processing(self):
-        #this is nothing but a fancy state machine
-        #to get a valid key press we need
+# This is nothing but a fancy state machine to get a valid key press we need
         MIN_CONSECUTIVE = 2
-        #characters in a row
-        #with no more than
+# Characters in a row with no more than
         MAX_GAP = 0.3000
-        #seconds between each consecutive characters
-        #otherwise we'll think they've pressed the same
-        #key twice
+# Seconds between each consecutive characters otherwise we'll think they've pressed the same key twice
 
         self.charStr = ""
 
@@ -249,7 +287,6 @@ class DTMFdetector(object):
         charIndex = -1
 
         for i in self.characters:
-
             charIndex+=1
             currentChar = i[0]
             currentTime = i[1]
@@ -258,22 +295,21 @@ class DTMFdetector(object):
             if self.debug:
                 print "curr char:", currentChar, "time delta:", timeDelta #for debugging
 
-            #check if this is the same char as last time
+# Check if this is the same char as last time
             if lastChar == currentChar:
                 currentCount+=1
             else:
-            #some times it seems we'll get a stream of good input, then some erronous input
-            #will pop-up just once. So what we're gonna do is peak ahead here and see what
-            #if it goes back to the pattern we're getting and then decide if we should
-            # let it go, stop th whole thing
-            # Make sure we can look ahead
+# Some times it seems we'll get a stream of good input, then some erronous input
+# will pop-up just once. So what we're gonna do is peak ahead here and see what
+# if it goes back to the pattern we're getting and then decide if we should
+# let it go, stop th whole thing Make sure we can look ahead
                 if len(self.characters) > (charIndex + 2):
                     if (self.characters[charIndex + 1][0] == lastChar) and (self.characters[charIndex + 2][0] == lastChar):
                       #forget this every happened
                         lastTime = currentTime
                         continue
 
-            #check to see if we have a valid key press on our hands
+# Check to see if we have a valid key press on our hands
                 if currentCount >= MIN_CONSECUTIVE:
                     self.charStr+=lastChar
                     currentCount = 1
@@ -281,10 +317,9 @@ class DTMFdetector(object):
                     lastTime = currentTime
                     continue
 
-            #check to see if we have a big enough gap to make us think we've
-            #got a new key press
+# Check to see if we have a big enough gap to make us think we've got a new key press
             if timeDelta > MAX_GAP:
-                #so de we have enough counts for this to be valid?
+# So do we have enough counts for this to be valid?
                 if (currentCount - 1) >= MIN_CONSECUTIVE:
                     self.charStr+=lastChar
                 currentCount = 1
@@ -292,13 +327,16 @@ class DTMFdetector(object):
             lastChar = currentChar
             lastTime = currentTime
 
-        #check the end of the characters
+# Check the end of the characters
         if currentCount >= MIN_CONSECUTIVE:
             self.charStr+=lastChar
 
-   ###########################################
-   ## the Goertzel algorithm
-   ## takes in a 16 bit signed sample
+
+################################################################################################################
+## the Goertzel algorithm
+## takes in a 16 bit signed sample
+################################################################################################################
+
     def goertzel(self, sample):
         q0 = 0
         i = 0
@@ -320,19 +358,21 @@ class DTMFdetector(object):
             self.sample_count = 0
 
 
-   ###########################################
-   ## calculate the coefficients ahead of time
+################################################################################################################
+## To calculate the coefficients ahead of time
+################################################################################################################
+
     def calc_coeffs(self):
         for n in range(self.MAX_BINS):
             self.coefs[n] = 2.0 * math.cos(2.0 * math.pi * self.freqs[n] / self.SAMPLING_RATE)
          #print "coefs", n, "=", self.coefs[n] #for debugging
 
 
-   ###########################################
-   ## this will take in a file name of a WAV file and return
-   ## a string that contains the characters that were detected
-   ## so if youre WAV file has the DTMFs for 5,5,5,3 then the string
-   ## it returns will be "5553"
+################################################################################################################
+## This will take in a file name of a WAV file and return a string that contains the characters that were
+## detected. So if you have a WAV file has the DTMFs for 5,5,5,3 then the string it returns will be "5553".
+################################################################################################################
+
     def getDTMFfromWAV(self, filename):
         self.reset() #reset the current state of the detector
 
@@ -357,10 +397,11 @@ class DTMFdetector(object):
 
 
 
-
-freq = 8000
+freq = 48000
 debug = 1
-seq = "1590"
+seq = "0159"
+b1_b2_audio = "/home/sreekanth/Programs/asp-python/Input/DTMF/SWB_OPUS_celt_b1_b2.wav"
+b2_b1_audio = "/home/sreekanth/Programs/asp-python/Input/DTMF/SWB_OPUS_celt_b2_b1.wav"
 
 dtmf = DTMFdetector(freq, debug)
 
