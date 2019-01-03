@@ -147,6 +147,27 @@ class DTMFdetector(object):
             self.GOERTZEL_N = 92
             self.SAMPLING_RATE = 8000
 
+        # if pfreq == 48000:
+        #     #48kHz samples
+        #     self.GOERTZEL_N = 552
+        #     self.SAMPLING_RATE = 48000
+        # elif pfreq == 32000:
+        #     #32kHz samples
+        #     self.GOERTZEL_N = 368
+        #     self.SAMPLING_RATE = 32000
+        # elif pfreq == 24000:
+        #     #24kHz samples
+        #     self.GOERTZEL_N = 276
+        #     self.SAMPLING_RATE = 24000
+        # elif pfreq == 16000:
+        #     #16kHz samples
+        #     self.GOERTZEL_N = 184
+        #     self.SAMPLING_RATE = 16000
+        # else:
+        #     #8kHz samples (default)
+        #     self.GOERTZEL_N = 92
+        #     self.SAMPLING_RATE = 8000
+
 # The following are the DTMF frequencies that we're looking for
 
         self.freqs = [697, 770, 852, 941, 1209, 1336, 1477, 1633]
