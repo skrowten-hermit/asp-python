@@ -6,24 +6,20 @@
 
 from Tkinter import*
 import tkSnack
-root=Tk()
-tkSnack.initializeSnack(root)
-root.withdraw()
 import wave
-##import graph_plot_voip
-import os
-import string
-import time
-
 import numpy
-
+from numpy.fft import fft
+from math import sqrt
+import string
+import os
+import time
 import gc
+##import graph_plot_voip
 
 import graph_plot
 import result_write
 import rms_calculate
 import result_calculate_voip
-from numpy.fft import fft
 
 ##from pympler.tracker import SummaryTracker
 ##from mem_top import mem_top
@@ -32,43 +28,62 @@ from numpy.fft import fft
 ##fp1=open('snack.log','a+')
 ##@profile(stream=fp1)
 
-def delay_work(INPUT_WAVE_FILE,OUTPUT_WAVE_FILES):
-    mysound=tkSnack.Sound()
-    mysound.read(INPUT_WAVE_FILE)
-    mysound2 = tkSnack.Sound()
-    mysound2.read(OUTPUT_WAVE_FILES)
-    orig=mysound.pitch()
-    rec=mysound2.pitch()
-    corr = numpy.correlate(orig, rec, 'full')
-    delay = int(len(corr) / 2) - numpy.argmax(corr)
+
+root = Tk()
+tkSnack.initializeSnack(root)
+root.withdraw()
+
+mysound = tkSnack.Sound()
+
+def calc_pitch(wav_file):
+    mysound.read(wav_file)
+    pitch_val = mysound.pitch()
+    return pitch_val
+
+
+def calc_delay(in_wav, rec_wav):
+    orig_pitch = calc_pitch(in_wav)
+    rec_pitch = calc_pitch(rec_wav)
+    corr_pitch = numpy.correlate(orig_pitch, rec_pitch, 'full')
+    delay = int(len(corr_pitch) / 2) - numpy.argmax(corr_pitch)
     print "Delay =", delay
     return delay
 
-def snack_work(INPUT_WAVE_FILE,DEBUG,OUTPUT_WAVE_FILES,COUNTER_MAIN,OUTPUT_TEXT_FILES,OUTPUT_GRAPH_FILES):
-##    log_in=10*"#"+"Snack_%s"+10*"#"
-##    fp1.write(log_in)
 
-##   processing original wave file
-    mysound=tkSnack.Sound()
-    mysound.read(INPUT_WAVE_FILE)
+def process_wav_file(wav_file, recorded, out_text_path, debug):
+    if recorded == 0:
+        print "Processing Input File...."
+    else:
+        print "Processing Output File...."
+    wav_pitch_vals = calc_pitch(wav_file)
+    wav_pitch_len = len(wav_pitch_vals)
 
-## pitch calculation/pitch plot/pitch text write
-    PITCH_VALUES= mysound.pitch()
-    PITCH_LENGTH=len(PITCH_VALUES)
+    pitch_sum = 0
+    temp_count = 0
+    while temp_count < wav_pitch_len:
+        pitch_sum += wav_pitch_vals[temp_count]
+        temp_count += 1
 
-    PITCH_SUM_ORIG=0
-    temp_count=0
-    while temp_count<PITCH_LENGTH:
-        PITCH_SUM_ORIG=PITCH_SUM_ORIG+PITCH_VALUES[temp_count]
-        temp_count=temp_count+1
-    pitch_count_orig=PITCH_SUM_ORIG/temp_count
-    Pitch_Count_Orig,Pitch_Value_Orig=result_write.pitch_result(PITCH_LENGTH,PITCH_VALUES,0,OUTPUT_TEXT_FILES,DEBUG)
+    pitch_count = pitch_sum/temp_count
+    print "Print pitch count = ", pitch_count
+    pitch_count = pitch_sum / wav_pitch_len
+    print "Print pitch count = ", pitch_count
+
+    pitch_count, pitch_val = pitch_result(wav_pitch_len, wav_pitch_vals, recorded, out_text_path, debug)
 
 ## RMS calculation/fft plot/fft text write
-    e= fft(PITCH_VALUES)
-    FFT_VALUES=abs(e)
-    FFT_LENGTH=len(FFT_VALUES)
-    SQUARE_ORIG=rms_calculate.RMS_FIND(FFT_LENGTH,FFT_VALUES,DEBUG)
+    fft_wav = fft(wav_pitch_vals)
+    wav_fft_vals = abs(fft_wav)
+    wav_fft_len = len(wav_fft_vals)
+    wav_rms = rms_calculate(wav_fft_len, wav_fft_vals, debug)
+
+    return pitch_count, pitch_val, wav_rms
+
+
+def speech_compare(in_wav_file , rec_wav_file, COUNTER_MAIN, out_text_path, out_graph_path, debug):
+
+    pitch_count_orig, pitch_val_orig, inwav_rms = process_wav_file(in_wav_file, 0, out_text_path, debug)
+    pitch_count_rec, pitch_val_rec, recwav_rms = process_wav_file(rec_wav_file, 1, out_text_path, debug)
 
     mysound.destroy()
 
@@ -235,78 +250,44 @@ def snack_work(INPUT_WAVE_FILE,DEBUG,OUTPUT_WAVE_FILES,COUNTER_MAIN,OUTPUT_TEXT_
 # TEST_CASE_RESULT_IS_sin,TEST_CASE_OBSERVATION_IS_sin=snack_operations.snack_work(sin,DEBUG,sout,COUNTER_MAIN,op_fold,op_fold)
 
 
-
-
-# ! /bin/env/python
-##########################################################################################################################################
-##########################################################################################################################################
-## File              :: rms_calculate.py
-##########################################################################################################################################
-##########################################################################################################################################
-from math import sqrt
-
-
-##########################################################################################################################################
-## Function          :: RMS_FIND
-## Arguments         :: RFFT_LENGTH         - Total number of fft values.
-##                   :: RFFT_VALUES         - Value of each fft sample
-##                   :: DEBUG               - Enable to print DEBUG prints.
-## Description       :: This function writes the pitch values to text file.
-##########################################################################################################################################
-def RMS_FIND(RFFT_LENGTH, RFFT_VALUES, DEBUG):
-    DEBUG = int(DEBUG)
-    count = 0
-    sum_value = 0
-    while (count < RFFT_LENGTH):
-        if RFFT_VALUES[count] > 0:
-            root = sqrt(RFFT_VALUES[count])
-            sum_value = sum_value + root
-        count = count + 1
-    mean = sum_value / count
-    square = mean * mean
-    return square
 # *-----------------------------------------------------------------------------------------------------------------------------------------
 
+def rms_calculate(fft_len, fft_vals, debug):
+    debug = int(debug)
+    count = 0
+    sum_value = 0
+    while (count < fft_len):
+        if fft_vals[count] > 0:
+            root = sqrt(fft_vals[count])
+            sum_value += root
+        count = count + 1
+    mean = sum_value / count
+    rms = mean * mean
+    return rms
 
-# ! /bin/env/python
-##########################################################################################################################################
-##########################################################################################################################################
-## File              :: result_write.py
-##########################################################################################################################################
-##########################################################################################################################################
-##########################################################################################################################################
-## Function          :: pitch_result
-## Arguments         :: EPITCH_LENGTH       - Total number of pitch values.
-##                   :: EPITCH_VALUES       - Value of each pitch sample
-##                   :: RECORDED            - Flag to decide the argumets belongs to original wave file or recorded wave.
-##                      OUTPUT_TEXT_FILES   - path where output text files has to be saved.
-##                      DEBUG               - Enable to print DEBUG prints.
-## Description       :: This function writes the pitch values to text file.
-##########################################################################################################################################
+# *-----------------------------------------------------------------------------------------------------------------------------------------
 
-
-import string
-
-
-def pitch_result(EPITCH_LENGTH, EPITCH_VALUES, RECORDED, OUTPUT_TEXT_FILES, DEBUG):
-    DEBUG = int(DEBUG)
+def pitch_result(pitch_len, pitch_vals, recorded, out_text_path, debug):
+    debug = int(debug)
     count_pitch = 0
     pitch_stop_flag = 0
-    Output_Pitch_Count = 0
-    Output_Pitch_Value = 0
+    in_pitch_cnt = 0
+    in_pitch_val = 0
+    out_pitch_cnt = 0
+    out_pitch_val = 0
 
-    if RECORDED == 0:
-        path = OUTPUT_TEXT_FILES + 'inputpitch.txt'
-        if DEBUG == 1:
+    if recorded == 0:
+        path = out_text_path + 'inputpitch.txt'
+        if debug == 1:
             print path
         text_file = open(path, "a")
     else:
-        path = OUTPUT_TEXT_FILES + 'outputpitch.txt'
-        if DEBUG == 1:
+        path = out_text_path + 'outputpitch.txt'
+        if debug == 1:
             print path
         text_file = open(path, "a")
 
-    while (count_pitch < EPITCH_LENGTH):
+    while (count_pitch < pitch_len):
         text_file.write("fft no\t\tfft abs value")
         text_file.write("\n")
         text_file.write(" ")
@@ -314,31 +295,34 @@ def pitch_result(EPITCH_LENGTH, EPITCH_VALUES, RECORDED, OUTPUT_TEXT_FILES, DEBU
         text_file.write("----------------->")
 
         if pitch_stop_flag == 0:
-            if EPITCH_VALUES[count_pitch] != 0:
+            if pitch_vals[count_pitch] != 0:
                 pitch_stop_flag = 1
-                if DEBUG == 1:
+                if debug == 1:
                     print "pitch_stop_counter", pitch_stop_flag
-                if RECORDED == 0:
-                    Input_Pitch_Count = count_pitch
-                    Input_Pitch_Value = EPITCH_VALUES[count_pitch]
-                    print "Input pitch count    ::", Input_Pitch_Count
-                    print "Input Pitch Value    ::", Input_Pitch_Value
-                elif RECORDED == 1:
-                    Output_Pitch_Count = count_pitch
-                    Output_Pitch_Value = EPITCH_VALUES[count_pitch]
-                    print "Output pitch count   ::", Output_Pitch_Count
-                    print "Output Pitch Value   ::", Output_Pitch_Value
+                if recorded == 0:
+                    in_pitch_cnt = count_pitch
+                    in_pitch_val = pitch_vals[count_pitch]
+                    print "Input pitch count    ::", in_pitch_cnt
+                    print "Input Pitch Value    ::", in_pitch_val
+                else:
+                    out_pitch_cnt = count_pitch
+                    out_pitch_val = pitch_vals[count_pitch]
+                    print "Output pitch count   ::", out_pitch_cnt
+                    print "Output Pitch Value   ::", out_pitch_val
 
-        text_file.write(str(EPITCH_VALUES[count_pitch]))
+        text_file.write(str(pitch_vals[count_pitch]))
         text_file.write("\n\n")
         count_pitch = count_pitch + 1
 
-    if RECORDED == 0:
-        return Input_Pitch_Count, Input_Pitch_Value
-    elif RECORDED == 1:
-        if DEBUG == 1:
-            print "recorded3=", RECORDED
-        return Output_Pitch_Count, Output_Pitch_Value
+    if debug == 1:
+        print "Recorded = ", recorded
+
+    if recorded == 0:
+        return in_pitch_cnt, in_pitch_val
+    elif recorded == 1:
+        return out_pitch_cnt, out_pitch_val
+
+# *-----------------------------------------------------------------------------------------------------------------------------------------
 
 
 ##########################################################################################################################################
@@ -400,38 +384,12 @@ def fft_result(EFFT_LENGTH, EFFT_VALUES, FRECORDED, OUTPUT_TEXT_FILES, DEBUG):
         count_fft = count_fft + 1
 
 
-
-
-
-
-### from result_calculate_voip
-
-
-#! /bin/env/python
-##########################################################################################################################################
-##########################################################################################################################################
-## File              :: result_calculate_voip.py
-##########################################################################################################################################
-##########################################################################################################################################
-
-import string
-import time
-
-##########################################################################################################################################
-## Function          :: print_result
-## Arguments         :: SQUARE_REC          - Amount of time to be recorded.
-##                      SQUARE_ORIG         - Main test case which is running.
-##                      PITCH_SUM_ORIG      -
-##                      PITCH_SUM_REC       -
-##                      OUTPUT_TEXT_FILES   - path where output text files has to be saved.
-##                      DEBUG               - Enable to print DEBUG prints.
-## Description       :: This function calculates the pitch and RMS match.
-##########################################################################################################################################
-def Print_result(SQUARE_REC,SQUARE_ORIG,PITCH_SUM_ORIG,PITCH_SUM_REC,OUTPUT_TEXT_FILES,DEBUG):
-    DEBUG=int(DEBUG)
-    if SQUARE_REC==0:
-        RMS_MATCH=0
-        p2=RMS_MATCH
+def calc_match_perc(rms_in_wav, rms_rec_wav, pitch_sum_inwav , pitch_sum_recwav, text_out_path , debug):
+    debug = int(debug)
+    rms_match = 0
+    if rms_rec_wav == 0:
+        rms_match = 0
+        p=RMS_MATCH
     else:
         RMS_MATCH=SQUARE_ORIG*100/SQUARE_REC
         p2=RMS_MATCH
