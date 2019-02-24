@@ -28,6 +28,8 @@ def calc_pitch(wav_file):
     pitch_val = mysound.pitch()
     return pitch_val
 
+# *-----------------------------------------------------------------------------------------------------------------------------------------
+
 
 def calc_delay(in_wav, rec_wav):
     orig_pitch = calc_pitch(in_wav)
@@ -36,6 +38,8 @@ def calc_delay(in_wav, rec_wav):
     delay = int(len(corr_pitch) / 2) - numpy.argmax(corr_pitch)
     print "Delay =", delay
     return delay
+
+# *-----------------------------------------------------------------------------------------------------------------------------------------
 
 
 def process_wav_file(wav_file, recorded, out_text_path, debug):
@@ -75,6 +79,8 @@ def process_wav_file(wav_file, recorded, out_text_path, debug):
     wav_rms = rms_calculate(wav_fft_len, wav_fft_vals, debug)
 
     return pitch_count, pitch_val, pitch_sum, wav_pitch_len, wav_rms
+
+# *-----------------------------------------------------------------------------------------------------------------------------------------
 
 
 def speech_compare(in_wav_file , rec_wav_file, COUNTER_MAIN, out_files_path, out_graph_path, debug):
@@ -281,64 +287,45 @@ def pitch_result(pitch_len, pitch_vals, recorded, out_text_path, debug):
 
 # *-----------------------------------------------------------------------------------------------------------------------------------------
 
-
-##########################################################################################################################################
-## Function          :: power_result
-## Arguments         :: EPOWER_LENGTH       - Total number of power values.
-##                   :: EPOWER_VALUES       - Value of each power sample
-##                   :: PRECORDED           - Flag to decide the argumets belongs to original wave file or recorded wave.
-##                      OUTPUT_TEXT_FILES   - path where output text files has to be saved.
-##                      DEBUG               - Enable to print DEBUG prints.
-## Description       :: This function writes the power values to text file.
-##########################################################################################################################################
-
-
-def power_result(EPOWER_LENGTH, EPOWER_VALUES, PRECORDED, OUTPUT_TEXT_FILES, DEBUG):
-    DEBUG = int(DEBUG)
+def power_result_write(epower_length, epower_values, recorded, out_text_path, debug):
+    debug = int(debug)
     count_power = 0
-    if PRECORDED == 0:
-        text_file = open(OUTPUT_TEXT_FILES + 'input-power-values.txt', "a")
+    if recorded == 0:
+        text_file = open(out_text_path + 'input-power-values.txt', "a")
     else:
-        text_file = open(OUTPUT_TEXT_FILES + 'output-power-values.txt', "a")
-    while (count_power < EPOWER_LENGTH):
+        text_file = open(out_text_path + 'output-power-values.txt', "a")
+    while (count_power < epower_length):
         text_file.write("sample no\t\tpower value")
         text_file.write("\n")
         text_file.write(" ")
         text_file.write(str(count_power))
         text_file.write("----------------->")
-        text_file.write(str(EPOWER_VALUES[count_power]))
+        text_file.write(str(epower_values[count_power]))
         text_file.write("\n\n")
         count_power = count_power + 1
 
-
-##########################################################################################################################################
-## Function          :: fft_result
-## Arguments         :: EFFT_LENGTH         - Total number of fft values.
-##                   :: EFFT_VALUES         - Value of each fft sample
-##                   :: FRECORDED           - Flag to decide the argumets belongs to original wave file or recorded wave.
-##                      OUTPUT_TEXT_FILES   - path where output text files has to be saved.
-##                      DEBUG               - Enable to print DEBUG prints.
-## Description       :: This function writes the pitch values to text file.
-##########################################################################################################################################
+# *-----------------------------------------------------------------------------------------------------------------------------------------
 
 
-def fft_result(EFFT_LENGTH, EFFT_VALUES, FRECORDED, OUTPUT_TEXT_FILES, DEBUG):
-    DEBUG = int(DEBUG)
+def fft_result_write(fft_length, fft_values, recorded, out_text_path, debug):
+    debug = int(debug)
     count_fft = 0
 
-    if FRECORDED == 0:
-        text_file = open(OUTPUT_TEXT_FILES + 'input-abs-values.txt', "a")
+    if recorded == 0:
+        text_file = open(out_text_path + 'input-abs-values.txt', "a")
     else:
-        text_file = open(OUTPUT_TEXT_FILES + 'output-abs-values.txt', "a")
-    while (count_fft < EFFT_LENGTH):
+        text_file = open(out_text_path + 'output-abs-values.txt', "a")
+    while (count_fft < fft_length):
         text_file.write("fft no\t\tfft abs value")
         text_file.write("\n")
         text_file.write(" ")
         text_file.write(str(count_fft))
         text_file.write("----------------->")
-        text_file.write(str(EFFT_VALUES[count_fft]))
+        text_file.write(str(fft_values[count_fft]))
         text_file.write("\n\n")
         count_fft = count_fft + 1
+
+# *-----------------------------------------------------------------------------------------------------------------------------------------
 
 
 def calc_match_perc(rms_in_wav, rms_rec_wav, pitch_sum_inwav , pitch_sum_recwav, text_out_path , debug):
