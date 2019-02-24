@@ -1,7 +1,4 @@
-##Audio & Speech Verification routines, base version
-
-
-### From snack_operations
+##Audio & Speech Verification routines, base version From snack_operations
 
 
 from Tkinter import*
@@ -14,19 +11,7 @@ import string
 import os
 import time
 import gc
-##import graph_plot_voip
 
-import graph_plot
-import result_write
-import rms_calculate
-import result_calculate_voip
-
-##from pympler.tracker import SummaryTracker
-##from mem_top import mem_top
-##import logging
-##from memory_profiler import profile
-##fp1=open('snack.log','a+')
-##@profile(stream=fp1)
 
 
 root = Tk()
@@ -34,6 +19,9 @@ tkSnack.initializeSnack(root)
 root.withdraw()
 
 mysound = tkSnack.Sound()
+wave_rec = 1
+
+
 
 def calc_pitch(wav_file):
     mysound.read(wav_file)
@@ -55,8 +43,17 @@ def process_wav_file(wav_file, recorded, out_text_path, debug):
         print "Processing Input File...."
     else:
         print "Processing Output File...."
-    wav_pitch_vals = calc_pitch(wav_file)
-    wav_pitch_len = len(wav_pitch_vals)
+
+    if recorded == 1:
+        try:
+            wav_pitch_vals = calc_pitch(wav_file)
+            wav_pitch_len = len(wav_pitch_vals)
+            wave_rec = 1
+        except:
+            wave_rec = 0
+    else:
+        wav_pitch_vals = calc_pitch(wav_file)
+        wav_pitch_len = len(wav_pitch_vals)
 
     pitch_sum = 0
     temp_count = 0
@@ -77,165 +74,125 @@ def process_wav_file(wav_file, recorded, out_text_path, debug):
     wav_fft_len = len(wav_fft_vals)
     wav_rms = rms_calculate(wav_fft_len, wav_fft_vals, debug)
 
-    return pitch_count, pitch_val, wav_rms
+    return pitch_count, pitch_val, pitch_sum, wav_pitch_len, wav_rms
 
 
-def speech_compare(in_wav_file , rec_wav_file, COUNTER_MAIN, out_text_path, out_graph_path, debug):
+def speech_compare(in_wav_file , rec_wav_file, COUNTER_MAIN, out_files_path, out_graph_path, debug):
 
-    pitch_count_orig, pitch_val_orig, inwav_rms = process_wav_file(in_wav_file, 0, out_text_path, debug)
-    pitch_count_rec, pitch_val_rec, recwav_rms = process_wav_file(rec_wav_file, 1, out_text_path, debug)
+    pitch_count_orig, pitch_val_orig, pitch_sum_orig, pitch_len_orig, inwav_rms = process_wav_file(in_wav_file, 0, out_files_path, debug)
+    pitch_count_rec, pitch_val_rec, pitch_sum_rec, pitch_len_rec, recwav_rms = process_wav_file(rec_wav_file, 1, out_files_path, debug)
 
-    mysound.destroy()
+    pit_mat, rms_mat = calc_match_perc(inwav_rms, recwav_rms, pitch_sum_orig , pitch_sum_rec, out_files_path , debug)
 
-## processing recorded wave file
-    mysound=tkSnack.Sound()
-    Rec_path=OUTPUT_WAVE_FILES
-    mysound.read(Rec_path)
-    if DEBUG==1:
-        print "Rec_path=",Rec_path
+    if wave_rec == 1:
+        if debug == 1:
+            print "Output Pitch Count = ", pitch_count_rec
+            print "Output Pitch Value = ", pitch_val_rec
+            print "Input Pitch Count = ", pitch_count_orig
+            print "Input Pitch Value = ", pitch_val_orig
 
-## pitch calculation/pitch plot/pitch text write
-    REC_PITCH_VALUES= mysound.pitch()
-    try:
-        REC_PITCH_LENGTH=len(REC_PITCH_VALUES)
-        wave_rec=1
-    except:
-        wave_rec=0
-    if wave_rec==1:
-        PITCH_SUM_REC=0
-        temp_count=0
-        while temp_count<REC_PITCH_LENGTH:
-                PITCH_SUM_REC=PITCH_SUM_REC+REC_PITCH_VALUES[temp_count]
-                temp_count=temp_count+1
-        pitch_count_rec=PITCH_SUM_REC/temp_count
-        Pitch_Count_Rec,Pitch_Value_Rec=result_write.pitch_result(REC_PITCH_LENGTH,REC_PITCH_VALUES,1,OUTPUT_TEXT_FILES,DEBUG)
-
-    ## RMS calculation/fft plot/fft text write
-        e= fft(REC_PITCH_VALUES)
-        REC_FFT_VALUES=abs(e)
-        REC_FFT_LENGTH=len(REC_FFT_VALUES)
-        SQUARE_REC=rms_calculate.RMS_FIND(REC_FFT_LENGTH,REC_FFT_VALUES,DEBUG)
-
-    ## final step RMS match and pitch match calculation
-        par1,par2=result_calculate_voip.Print_result(SQUARE_REC,SQUARE_ORIG,PITCH_SUM_ORIG,PITCH_SUM_REC,OUTPUT_TEXT_FILES,DEBUG)
-
-        if DEBUG==1:
-            print "Output_Pitch_Count=",Pitch_Count_Rec
-            print "Output_Pitch_Value=",Pitch_Value_Rec
-            print "Input_Pitch_Count=",Pitch_Count_Orig
-            print "Input_Pitch_Value=",Pitch_Value_Orig
-
-        Last_blanks=REC_PITCH_LENGTH-50 ##modified to last 50 pitch values from last 100 values
-        Sum_last=0
-        while Last_blanks<REC_PITCH_LENGTH:
-            Sum_last+=REC_PITCH_VALUES[Last_blanks]
-            Last_blanks+=1
+        last_blanks = pitch_len_rec - 50 ##modified to last 50 pitch values from last 100 values
+        sum_last = 0
+        while last_blanks < pitch_len_rec:
+            sum_last += pitch_val_rec[last_blanks]
+            last_blanks += 1
 
     ## calculating time delay b/w play and record
-        delay_rec=(Pitch_Count_Rec-Pitch_Count_Orig)*10
-        print "Time delay between playing and recording = %s m sec"% delay_rec
-        delay_rec_sec = delay_rec*0.001
-        print "Time delay between playing and recording = %f sec"% delay_rec_sec
+        delay_rec = (pitch_count_rec - pitch_count_orig) * 10
+        print "Time delay between playing and recording = %s milli seconds" %delay_rec
+        delay_rec_sec = delay_rec * 0.001
+        print "Time delay between playing and recording = %f seconds" %delay_rec_sec
         reason="Audio exists"
-        if DEBUG==1:
+        if debug == 1:
             print "Test End Time (12hr) :", time.strftime("%I:%M:%S %p", time.localtime())
-        if 0 < Pitch_Count_Rec and Pitch_Count_Rec < ((Pitch_Count_Orig)*(0.8)):
-            result_file=open(OUTPUT_TEXT_FILES+"Fail_Result.txt", "a")
+        if 0 < pitch_count_rec and pitch_count_rec < (pitch_count_orig *0.8):
+            result_file=open(out_files_path + "Fail_Result.txt", "a")
             result_file.write(str(COUNTER_MAIN))
             result_file.write("\t\t\t\tFail\n")
             result_file.close()
             reason="Noisy audio...."
             result="Fail"
-
-        elif delay_rec_sec<-50:
-            result_file=open(OUTPUT_TEXT_FILES+"Fail_Result.txt", "a")
+        elif delay_rec_sec < -50:
+            result_file=open(out_files_path + "Fail_Result.txt", "a")
             result_file.write(str(COUNTER_MAIN))
             result_file.write("\t\t\t\tFail\n")
             result_file.close()
             reason="Components seen before audio started...."
             result="Fail"
-
-        elif Sum_last>50:
-            result_file=open(OUTPUT_TEXT_FILES+"Fail_Result.txt", "a")
+        elif sum_last > 50:
+            result_file=open(out_files_path + "Fail_Result.txt", "a")
             result_file.write(str(COUNTER_MAIN))
             result_file.write("\t\t\t\tFail\n")
             result_file.close()
-            print "SUM-100=",Sum_last
+            print "SUM - 100 = ", sum_last
             reason="High audio gain, check gain setting(s)...."
             result="Fail"
-
         else:
-            if par1>260 and par2 > 200:
+            if pit_mat > 260 and rms_mat > 200:
                 print "Condition 1"
                 reason="Audio Gains/Noise is too high...."
                 result="Fail"
-                result_file=open(OUTPUT_TEXT_FILES+"Fail_Result.txt", "a")
+                result_file=open(out_files_path + "Fail_Result.txt", "a")
                 result_file.write(str(COUNTER_MAIN))
                 result_file.write("\t\t\t\tFail\n")
                 result_file.close()
-
-            elif par1<80 and par2<80:
+            elif pit_mat < 80 and rms_mat < 80:
                 print "Condition 2"
                 reason="Components are below threshold...."
                 result="Fail"
-                result_file=open(OUTPUT_TEXT_FILES+"Fail_Result.txt", "a")
+                result_file=open(out_files_path + "Fail_Result.txt", "a")
                 result_file.write(str(COUNTER_MAIN))
                 result_file.write("\t\t\t\tFail\n")
                 result_file.close()
-
-            elif par1>60 and par2<70:
+            elif pit_mat > 60 and rms_mat < 70:
                 print "Condition 3"
                 reason="Components are much below threshold...."
                 result="Fail"
-                result_file=open(OUTPUT_TEXT_FILES+"Fail_Result.txt", "a")
+                result_file=open(out_files_path + "Fail_Result.txt", "a")
                 result_file.write(str(COUNTER_MAIN))
                 result_file.write("\t\t\t\tFail\n")
                 result_file.close()
-
-            elif par1>80 and par2 >80 and par1<150 and par2<130:
+            elif pit_mat > 80 and rms_mat > 80 and pit_mat < 150 and rms_mat < 130:
                 reason="Voice/Speech exists...."
                 result="Pass"
-                result_file=open(OUTPUT_TEXT_FILES+"Fail_Result.txt", "a")
+                result_file=open(out_files_path + "Fail_Result.txt", "a")
                 result_file.write(str(COUNTER_MAIN))
                 result_file.write("\t\t\t\tPass\n")
                 result_file.close()
-
-            elif par1>80 and par2>80 and par1<260.01 and par2<200.01:
+            elif pit_mat > 80 and rms_mat > 80 and pit_mat < 260.01 and rms_mat < 200.01:
                 reason="Voice/Speech exists...."
                 result="Pass"
-                result_file=open(OUTPUT_TEXT_FILES+"Fail_Result.txt", "a")
+                result_file=open(out_files_path + "Fail_Result.txt", "a")
                 result_file.write(str(COUNTER_MAIN))
                 result_file.write("\t\t\t\tPass\n")
                 result_file.close()
-
-            elif par1>65 and par2>90 and par1 <150 and par2<200:
+            elif pit_mat > 65 and rms_mat > 90 and pit_mat < 150 and rms_mat < 200:
                 reason="Voice/Speech exists...."
                 result="Pass"
-                result_file=open(OUTPUT_TEXT_FILES+"Fail_Result.txt", "a")
+                result_file=open(out_files_path + "Fail_Result.txt", "a")
                 result_file.write(str(COUNTER_MAIN))
                 result_file.write("\t\t\t\tPass\n")
                 result_file.close()
-
             else:
-                print "Condition 4", par1, par2
+                print "Condition 4", pit_mat, rms_mat
                 reason="Faulty audio, please check the Graphs and audio files...."
                 result="Fail"
-                result_file=open(OUTPUT_TEXT_FILES+"Fail_Result.txt", "a")
+                result_file=open(out_files_path + "Fail_Result.txt", "a")
                 result_file.write(str(COUNTER_MAIN))
                 result_file.write("\t\t\t\tFail\n")
                 result_file.close()
-
     else:
         print "Condition 4"
         reason="Faulty audio, please check the supporting files...."
         result="Fail"
-        result_file=open(OUTPUT_TEXT_FILES+"Fail_Result.txt", "a")
+        result_file=open(out_files_path + "Fail_Result.txt", "a")
         result_file.write(str(COUNTER_MAIN))
         result_file.write("\t\t\t\tFail\n")
         result_file.close()
-    if OUTPUT_WAVE_FILES:
-        print "Inputs=",INPUT_WAVE_FILE, OUTPUT_WAVE_FILES, OUTPUT_GRAPH_FILES, COUNTER_MAIN
-        graph_plot.result_plot(INPUT_WAVE_FILE, OUTPUT_WAVE_FILES, OUTPUT_GRAPH_FILES, COUNTER_MAIN)
+
+    if rec_wav_file:
+        print "Inputs=",in_wav_file, rec_wav_file, out_files_path, COUNTER_MAIN
+        graph_plot.result_plot(in_wav_file, rec_wav_file, out_files_path, COUNTER_MAIN)
 
     mysound.destroy()
 ##    root.destroy()
