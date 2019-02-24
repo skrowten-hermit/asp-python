@@ -386,74 +386,70 @@ def fft_result(EFFT_LENGTH, EFFT_VALUES, FRECORDED, OUTPUT_TEXT_FILES, DEBUG):
 
 def calc_match_perc(rms_in_wav, rms_rec_wav, pitch_sum_inwav , pitch_sum_recwav, text_out_path , debug):
     debug = int(debug)
-    rms_match = 0
+    rms_match = 0.0
     if rms_rec_wav == 0:
-        rms_match = 0
-        p=RMS_MATCH
+        rms_match = 0.0
     else:
-        RMS_MATCH=SQUARE_ORIG*100/SQUARE_REC
-        p2=RMS_MATCH
-        if RMS_MATCH>300:
-            if DEBUG==1:
-                print "Check if any other audio is playing........."
-            reason="Check if any other audio is playing........."
-            result="Fail"
+        rms_match = rms_in_wav *100 / rms_rec_wav
+        if rms_match > 300:
+            if debug == 1:
+                print "Check if any other audio is playing...."
+            reason = "Check if any other audio is playing...."
+            result = "Fail"
             return result,reason
         else:
-            if RMS_MATCH>100:
-                noise=RMS_MATCH-100
-                RMS_MATCH=RMS_MATCH-noise
+            if rms_match > 100:
+                noise = rms_match - 100
+                rms_match = rms_match - noise
                 print "RESULTS"
-                print "RMS_MATCH=",RMS_MATCH
-                print "NOISE=",noise/4
+                print "RMS_MATCH = ", rms_match
+                print "NOISE = ", noise/4
             else :
-                if RMS_MATCH<50:
-                    if DEBUG==1:
-                        print "NOISE=",RMS_MATCH
+                if rms_match < 50:
+                    if debug == 1:
+                        print "NOISE = ",rms_match
                 else:
-                    if DEBUG==1:
-                        print "RMS_MATCH=",RMS_MATCH
+                    if debug == 1:
+                        print "RMS_MATCH = ", rms_match
                         print "Noise is negligible...."
-            path=OUTPUT_TEXT_FILES+'final_result.txt'
+            path = text_out_path + 'final_result.txt'
             text_file = open(path, "a")
-            text_file.write("RMS_MATCH=")
-            text_file.write(str(RMS_MATCH))
+            text_file.write("RMS_MATCH = ")
+            text_file.write(str(rms_match))
             text_file.write("\n")
             text_file.close()
 
-    if PITCH_SUM_REC==0:
-        PITCH_MATCH=0
-        p1=PITCH_MATCH
+    if pitch_sum_recwav == 0:
+        pitch_match = 0
     else:
-        PITCH_MATCH=PITCH_SUM_ORIG*100/PITCH_SUM_REC
-        p1=PITCH_MATCH
+        pitch_match = pitch_sum_inwav * 100 / pitch_sum_recwav
 
-    if PITCH_MATCH<50 :
-        print "Test fails....."
+    if pitch_match < 50:
+        print "Test fails...."
     else:
-            print "###########################################################################"
-            if PITCH_MATCH>300:
-                    print "check input...."
+        print "###########################################################################"
+        if pitch_match > 300:
+            print "Check input...."
+        else:
+            if pitch_match > 100:
+                noise_pitch = pitch_match - 100
+                print "PITCH_MATCH = 100"
+                pitch_match = pitch_match - noise_pitch
+                print "NOISE_PITCH = ", noise_pitch/4
+                print "RMS_MATCH = ", rms_match
+
             else:
-                if PITCH_MATCH>100:
-                    NOISE_PITCH=PITCH_MATCH-100
-                    print "PITCH_MATCH=100"
-                    PITCH_MATCH=PITCH_MATCH-NOISE_PITCH
-                    print "NOISE_PITCH=",NOISE_PITCH/4
-                    print "RMS_MATCH=",RMS_MATCH
-
-                else:
-                    print "RMS_MATCH=",RMS_MATCH
-                    print "PITCH_MATCH=",PITCH_MATCH
+                print "RMS_MATCH = ", rms_match
+                print "PITCH_MATCH = ", pitch_match
 
     print "###########################################################################"
-    path=OUTPUT_TEXT_FILES+'final_result.txt'
+    path = text_out_path + 'final_result.txt'
     text_file = open(path, "a")
-    text_file.write("PITCH_MATCH=")
-    text_file.write(str(PITCH_MATCH))
+    text_file.write("PITCH_MATCH = ")
+    text_file.write(str(pitch_match))
     text_file.write("\n")
     text_file.close()
-    return p1,p2
+    return pitch_match, rms_match
 
 
 
