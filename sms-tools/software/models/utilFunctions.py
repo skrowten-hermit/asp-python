@@ -70,8 +70,8 @@ def wavplay(filename):
 		print("Input file does not exist. Make sure you computed the analysis/synthesis")
 	else:
 		if sys.platform == "linux" or sys.platform == "linux2":
-		    # linux
-		    subprocess.call(["aplay", filename])
+			# linux
+			subprocess.call(["aplay", filename])
 
 		elif sys.platform == "darwin":
 			# OS X
