@@ -254,6 +254,12 @@ class asv:
 #*-----------------------------------------------------------------------------------------------------------------------------------------
 
 
+    def inout_gain_levels(self):
+        print "Getting the gain levels of input and output files...."
+# Use 'SoX' command sox <filename>.wav -n stats to get dB levels (most likely its 'Pk lev dB')
+#*-----------------------------------------------------------------------------------------------------------------------------------------
+
+
     def pitch_result(self, pitchlen, pitchvalues, recorded):
         count_pitch = 0
         pitch_stop_flag = 0
