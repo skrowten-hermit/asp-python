@@ -35,17 +35,20 @@ sys.path.append(modpath)
 import utilFunctions as UF
 import dftModel as DFT
 
-
+# Returns a frequency and an array of floating point values (from wave file)
 (fs, x) = UF.wavread(stpath + '/sounds/piano.wav')
 print fs, x
 
 M = 501
-w = get_window('hamming', M)
+w = get_window('hamming', M) # Generates a smoothing window
 
+# To convert to samples, we start at 'time' second(s) and multiply time with sampling rate 'fs'
+# to get the sample at the start of 'time' second(s). Then we select the next 'M" samples to
+# get the input signal.
 time = 0.2
 x1 = x[int(time*fs):int(time*fs)+M]
 
-
+# The fragment of sound is passed to the functions in DFT - first to dftAnal with the FFT size defined as N.
 N = 1024
 mX, pX = DFT.dftAnal(x1, w, N)
 y = DFT.dftSynth(mX, pX, w.size) * sum(w)
