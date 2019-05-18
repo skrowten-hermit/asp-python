@@ -1,54 +1,35 @@
-import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.pyplot as pltx
-import matplotlib.pyplot as pltmX
-import matplotlib.pyplot as pltpX
-import matplotlib.pyplot as pltB
-import matplotlib.pyplot as pltmBX
-import matplotlib.pyplot as pltpBX
-from scipy.signal import get_window
-from scipy.fftpack import fft
-import sys, os, math
+import numpy as np
 
 """
-P2-1: DFT Model
+P1-1: DFT of a complex sinusoid
 
-This program implements analysis-synthesis using DFT i.e, it constructs a model where from a
-fragment of sound x[n], performs the FFT algorithm and then generates magnitude and phase 
-spectrum (analysis), which would again be used as the input to the inverse FFT algorithm and
-returns another fragment of sound as the output which is identical to the input fragment of 
-sound x[n].
+Computing the DFT means computing X[k] i.e., to compute all the spectral values present in a given signal x[n].
+So, we will be iterating over "k", which ranges from [0, N-1] and computing the sum. For the inverse DFT, we'll
+iterating over all time and over all "n" and for each "n" we'll be computing the sum.
 
 """
 
-# wdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../software/models/')
-cwd = os.getcwd()
-dtree = cwd.split('/')
-ltree = len(dtree)
-lroot = ltree - 3
-stpath =""
-stpath = '/'.join(dtree[:lroot])
-modpath = stpath + '/software/models/'
-sys.path.append(modpath)
+# The input signal x[n] can be defined with the help of sample size "N" and the frequency "k0" (the frequency
+# index) as a complex sinusoid.
 
+N = 64
+k0 = 7
+n = np.arange(N)
+x = np.exp(1j * 2 * np.pi * k0 * n / N)
 
-import utilFunctions as UF
-import dftModel as DFT
+X = np.array([])
 
-# Returns a frequency and an array of floating point values (from wave file)
-(fs, x) = UF.wavread(stpath + '/sounds/piano.wav')
-print fs, x
+for k in n:
+# arange creates time sample indexes 0 to N-1.
+    s = np.exp(1j * 2 * np.pi * k / N * np.arange(N))
+# The output spectrum is appended to existing spectrum whatever it was from the previous computation
+# and we'll compute the sum of the multiplied by the conjugate of our complex exponential. This is the
+# inner product discussed in the theory lectures.
+    X = np.append(X, sum(x * np.conjugate(s)))
 
-M = 501
-w = get_window('hamming', M) # Generates a smoothing window
-
-# To convert to samples, we start at 'time' second(s) and multiply time with sampling rate 'fs'
-# to get the sample at the start of 'time' second(s). Then we select the next 'M" samples to
-# get the input signal.
-time = 0.2
-x1 = x[int(time*fs):int(time*fs)+M]
-
-# The fragment of sound is passed to the functions in DFT - first to dftAnal with the FFT size defined as N.
-N = 1024
-mX, pX = DFT.dftAnal(x1, w, N)
-y = DFT.dftSynth(mX, pX, w.size) * sum(w)
+# If the following analysis plot shows a peak value defined in "N" above for the frequency "k0", we can
+# confirm that the input signal was indeed a complex sinusoid.
+plt.plot(np.arange(N), abs(X))
+plt.axis([0, N-1, 0, N])
+plt.show()
