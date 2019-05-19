@@ -92,7 +92,7 @@ pBX = np.unwrap(np.angle(BX))
 # to a value between -1 and 1. In case of 'fftbuffer', it is the same as x1 but is shifted
 # and plotted in a way that it's centred around zero, which means that the second half of
 # the signal is in positive time (horizontal axis, x-axis) and the first half of the signal
-# is in negative time (horizontal axis, x-axis).
+# is in negative time (horizontal axis, x-axis). This is called zero-phase windowing.
 # The magnitude spectrum shows the symmetry we have seen before with the positive part at
 # the beginning and the negative part at the end. We need only half of the N samples because
 # of the symmetry the other half is kind of redundant. The phase spectrum does look a
@@ -127,7 +127,7 @@ ax2.set_ylabel('amplitude (smoothed)')
 ax2.set_title('x1', fontsize=16)
 ax3.plot(fftbuffer, 'tab:orange')
 ax3.tick_params(axis='both', which='both', labelsize=7)
-ax3.set_xlabel('time (shifted)')
+ax3.set_xlabel('samples (zero-phase windowed)')
 ax3.set_ylabel('amplitude (smoothed)')
 ax3.set_title('fftbuffer', fontsize=16)
 ax4.plot(mX0, 'tab:blue')
