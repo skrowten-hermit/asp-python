@@ -11,9 +11,9 @@ from scipy.fftpack import fft
 import sys, os, math
 
 """
-P1-1: Sinusoid Analysis with a window function
+P1-1: STFT Analysis of a sound file
 
-This program implements analysis of a sinusoid with a window function using DFT.
+This program implements STFT analysis of a sound file.
 
 """
 
@@ -29,15 +29,21 @@ modpath = stpath + '/software/models/'
 sys.path.append(modpath)
 
 
-import dftModel as DFT
+import utilFunctions as UF
+import stft as STFT
 
-fs = 44100
-f = 5000.0
-M = 101
-x = np.cos(2 * np.pi * f * np.arange(M) / float(fs))
-N = 512
-w = get_window('hanning', M)
-mX, pX = DFT.dftAnal(x, w, N)
+inputFile = stpath + '/sounds/piano.wav'
+window_type = 'hamming'
+M = 801
+N = 1024
+H = 400
+
+# Returns a frequency and an array of floating point values (from wave file)
+(fs, x) = UF.wavread(stpath + '/sounds/piano.wav')
+print fs, x
+
+w = get_window(window_type, M)
+mX, pX = STFT.stftAnal(x, fs, w, N, H)
 
 plt.plot(np.arange(0, fs / 2, fs / float(N), mX - max(mX)))
 plt.show()

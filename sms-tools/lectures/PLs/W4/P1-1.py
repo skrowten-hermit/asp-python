@@ -88,7 +88,10 @@ pX1[hN:] = pX[:hN] # For 'hN' version 1.0
 plt.plot(pX1)
 plt.show()
 
-# The following allow us to visualize the x-axis of the magnitude spectrum better.
+# The following allow us to visualize the x-axis of the magnitude spectrum better. Basically, we
+# have normalized the horizontal axis (x-axis) by dividing by N and multiplying by M so that we
+# actually see the samples with respect to the window. Also, the magnitude is normalized so that
+# the maximum value is 0 dB.
 plt.plot(np.arange(-hN, hN) / float(N) * M, mX1 - max(mX1))
 plt.axis([-20, 20, -80, 0])
 plt.show()
