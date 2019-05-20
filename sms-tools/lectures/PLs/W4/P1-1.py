@@ -20,8 +20,10 @@ This program implements analysis of a window function using DFT.
 
 
 M = 63 # Window length/size.
-# Generates a smoothing window of type 'hanning', a raised cosine function.
-window = get_window('hanning', M)
+# Generates a smoothing window of type 'window_type', a raised cosine function in most cases.
+# 'window_type' can be any one of - 'hanning', 'hamming', 'blackman', 'blackmanharris'.
+window_type = 'hamming'
+window = get_window(window_type, M)
 # plt.plot(window)
 # plt.show()
 
@@ -91,9 +93,13 @@ plt.show()
 # The following allow us to visualize the x-axis of the magnitude spectrum better. Basically, we
 # have normalized the horizontal axis (x-axis) by dividing by N and multiplying by M so that we
 # actually see the samples with respect to the window. Also, the magnitude is normalized so that
-# the maximum value is 0 dB.
+# the maximum value is 0 dB. Also, we can limit the x-axis values (here between -20 and 20) and
+# y-axis values (here between -80 to 0). This plot can verify the values that we talked about in
+# the theory lectures - main lobe width (difference between the lowest points on either side of
+# the lobe) is about 4 bins and the nearest side lobe's highest level or peak is at approx.
+# -31.5 dB for hanning window. Here, the x-axis depicts 'bins' instead of frequency in Hz.
 plt.plot(np.arange(-hN, hN) / float(N) * M, mX1 - max(mX1))
-plt.axis([-20, 20, -80, 0])
+plt.axis([-20, 20, -100, 5])
 plt.show()
 
 # plt.plot(x) # Plots the amplitude-sample graph of x[n]
