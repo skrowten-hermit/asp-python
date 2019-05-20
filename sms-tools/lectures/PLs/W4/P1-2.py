@@ -11,9 +11,9 @@ from scipy.fftpack import fft
 import sys, os, math
 
 """
-P1-1: DFT Analysis of a window function
+P1-1: Sinusoid Analysis with a window function
 
-This program implements analysis of a window function using DFT.
+This program implements analysis of a sinusoid with a window function using DFT.
 
 """
 
