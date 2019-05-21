@@ -8,7 +8,7 @@ import matplotlib.pyplot as pltmBX
 import matplotlib.pyplot as pltpBX
 from scipy.signal import get_window
 from scipy.fftpack import fft
-import sys, os, math
+import sys, os, math, functools, time
 
 """
 P1-1: Detection of fundamental frequency f0
@@ -19,92 +19,85 @@ This program implements analysis of a window function using DFT.
 
 
 
-M = 63 # Window length/size.
-# Generates a smoothing window of type 'hanning', a raised cosine function.
-window = get_window('hanning', M)
-# plt.plot(window)
-# plt.show()
+cwd = os.getcwd()
+dtree = cwd.split('/')
+ltree = len(dtree)
+lroot = ltree - 3
+stpath = ""
+stpath = '/'.join(dtree[:lroot])
+modpath = stpath + '/software/models/'
+sys.path.append(modpath)
 
-# The following variables store the middle of the window information, irrespective of whether
-# the window size is an even or odd number.
-hM1 = int(math.floor((M + 1)) / 2)
-hM2 = int(math.floor(M / 2))
 
-# The following section prepares the window for computing the FFT. In order to do that, we
-# need to do zero-phase windowing - place the window at the zeroth location (shift and plot in
-# a way that it's centred around zero). So, we create a buffer 'fftbuffer' of the size of the
-# FFT and we place the window around the zeroth sample by splitting the samples into two halves
-# and shifting the second half to the left side (the beginning of the new buffer) and the first
-# half to the right side (the end of the new buffer). The spectrum is calculated on the data of
-# this resulting buffer called 'fftbuffer'.
-N = 512
-hN = N / 2 # 'hN' version 1.0
-# hN = (N / 2) + 1 # 'hN' version 2.0
-fftbuffer = np.zeros(N)
-fftbuffer[:hM1] = window[hM2:]
-fftbuffer[N - hM2:] = window[:hM2]
-# plt.plot(fftbuffer)
-# plt.show()
+import utilFunctions as UF
+import sineModel as SM
+import dftModel as DFT
 
-# To plot the magnitude spectrum in 'dB', we need to make sure that there are no zeroes in the
-# absolute value of the result of FFT operation on 'fftbuffer'. This is because for calculating
-# the magnitude in 'dB', we take the logarithm and 'log(0)' is "UNDEFINED". This is done by
-# checking if the absolute value is less than epsilon value, the minimum representable value in
-# python, which has to be zero (magnitude is always positive) or thereabouts and if any such
-# value is found, proceed by replacing it with epsilon value. This way undefined values can be
-# avoided. It is to be noted that the first part of magnitude spectrum will have +ve frequency
-# values and the second part will have negative frequency values.
-X = fft(fftbuffer)
-absX = abs(X)
-# plt.plot(absX)
-# plt.show()
-absX[absX < np.finfo(float).eps] = np.finfo(float).eps
-# plt.plot(absX)
-# plt.show()
-mX = 20 * np.log10(absX)
-plt.plot(mX)
+
+def TWM_Errors(pfreq, pmag, f0c):
+    p = 0.5 # Weighting by frequency value
+    q = 1.4 # Weighting related to the magnitude of peaks
+    r = 0.5 # Scaling related to the magnitude of peaks
+    rho = 0.33 # Weighting of MP error
+    Amax = max(pmag) # Maximum peak magnitude
+    maxnpeaks = 10 # Maximum number of peaks used
+    harmonic = np.matrix(f0c)
+    ErrorPM = np.zeros(harmonic.size) # Initializing PM Errors
+    MaxNPM = min(maxnpeaks, pfreq.size)
+
+    for i in range(0, MaxNPM): # Predicted to measured mismatch error
+        difmatrixPM = harmonic.T * np.ones(pfreq.size)
+        difmatrixPM = abs(difmatrixPM - np.ones((harmonic.size, 1)) * pfreq)
+        FreqDistance = np.amin(difmatrixPM, axis=1) # Minimum along rows
+        peakloc = np.argmin(difmatrixPM, axis=1)
+        Ponddif = np.array(FreqDistance) * (np.array(harmonic.T) ** (-p))
+        PeakMag = pmag[peakloc]
+        MagFactor = 10 ** ((PeakMag - Amax) / 20)
+        ErrorPM = ErrorPM + (Ponddif + MagFactor * (q * Ponddif - r)).T
+        harmonic = harmonic + f0c
+
+    ErrorMP = np.zeros(harmonic.size) # Initializing MP errors
+    MaxNMP = min(maxnpeaks, pfreq.size)
+
+    for i in range(0, f0c.size): # Measured to predicted mismatch error
+        nharm = np.round(pfreq[:MaxNMP] / f0c[i])
+        nharm = (nharm >= 1) * nharm + (nharm < 1)
+        FreqDistance = abs(pfreq[:MaxNMP] - nharm * f0c[i])
+        Ponddif = FreqDistance * (pfreq[:MaxNMP] ** (-p))
+        PeakMag = pmag[:MaxNMP]
+        MagFactor = 10 ** ((PeakMag - Amax) / 20)
+        ErrorMP[i] = sum(MagFactor * (Ponddif + MagFactor * (q * Ponddif - r)))
+
+    Error = (ErrorPM[0] / MaxNPM) + (rho * ErrorMP / MaxNMP) # Total error
+
+    return Error
+
+
+inputFile = stpath + '/sounds/sawtooth-440.wav'
+fs, x = UF.wavread(inputFile)
+N = 1024
+M = 601
+t = -60
+minf0 = 50
+maxf0 = 2000
+
+hN = N/2
+hM = (M+1)/2
+
+window_type = 'hamming'
+w = get_window(window_type, M)
+start = 0.8 * fs
+
+x1 = x[start:start+M]
+mX1, pX1 = DFT.dftAnal(x1, w, N)
+ploc = UF.peakDetection(mX1, t)
+iploc, ipmag, ipphase = UF.peakInterp(mX1, pX1, ploc)
+ipfreq = fs * iploc / N
+f0c = np.argwhere((ipfreq > minf0) & (ipfreq < maxf0))[:, 0]
+f0cf = ipfreq[f0c]
+f0Errors = TWM_Errors(ipfreq, ipmag, f0cf)
+
+freqaxis = fs * np.arange(((N/2) + 1)/(float(N)))
+plt.plot(freqaxis, mX1)
+plt.plot(ipfreq, ipmag, marker = 'x', linestyle = '')
 plt.show()
-pX = np.angle(X)
-plt.plot(pX)
-plt.show()
-
-# The following part nullifies/reverses/undo's the zero-phase windowing operation done earlier in
-# 'fftbuffer' in order to make the data easier to visualize. This 'mX1' is a better way display
-# (by moving the main lobe to the center) the magnitude spectrum. In the phase spectrum, the most
-# important observation is the phases in the middle. Though we have (2 * pi) discontinuities, it
-# can be deduced as having a value zero at every point.
-mX1 = np.zeros(N)
-pX1 = np.zeros(N)
-mX1[:hN] = mX[hN:] # For 'hN' version 1.0
-mX1[hN:] = mX[:hN] # For 'hN' version 1.0
-# mX1[:hN] = mX[N - hN:] # For 'hN' version 2.0
-# mX1[N - hN:] = mX[:hN] # For 'hN' version 2.0
-plt.plot(mX1)
-plt.show()
-pX1[:hN] = pX[hN:] # For 'hN' version 1.0
-pX1[hN:] = pX[:hN] # For 'hN' version 1.0
-# pX1[:hN] = pX[N - hN:] # For 'hN' version 2.0
-# pX1[N - hN:] = pX[:hN] # For 'hN' version 2.0
-plt.plot(pX1)
-plt.show()
-
-# The following allow us to visualize the x-axis of the magnitude spectrum better. Basically, we
-# have normalized the horizontal axis (x-axis) by dividing by N and multiplying by M so that we
-# actually see the samples with respect to the window. Also, the magnitude is normalized so that
-# the maximum value is 0 dB.
-plt.plot(np.arange(-hN, hN) / float(N) * M, mX1 - max(mX1))
-plt.axis([-20, 20, -80, 0])
-plt.show()
-
-# plt.plot(x) # Plots the amplitude-sample graph of x[n]
-# plt.plot(tx, x) # Plots the amplitude-time graph of x[n] with time in seconds
-# plt.plot(tx1, x1) # Plots the amplitude-time graph of x1[n] with time in seconds
-# plt.axis([start_time, stop_time, min(x1), max(x1)]) # Makes a tight plot of x1[n]
-# plt.plot(w) # Plots the amplitude-sample graph of smoothing window 'w'
-# plt.plot(mX1) # Plots the magnitude spectrum of x1[n] (in dB), this plots only the positive side
-# plt.show()    # of the spectrum, going from (half of sampling rate) 0 to N/2 (half of FFT size).
-# plt.plot(pX1) # Plots the phase spectrum of x1[n], with phase unwrap applied.
-# plt.axis([-0.2, 0.9, -0.8, 0.8])
-# plt.xlabel("time")
-# plt.ylabel("amplitude")
-# plt.show()
