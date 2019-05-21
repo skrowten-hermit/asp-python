@@ -24,7 +24,7 @@ cwd = os.getcwd()
 dtree = cwd.split('/')
 ltree = len(dtree)
 lroot = ltree - 3
-stpath =""
+stpath = ""
 stpath = '/'.join(dtree[:lroot])
 modpath = stpath + '/software/models/'
 sys.path.append(modpath)

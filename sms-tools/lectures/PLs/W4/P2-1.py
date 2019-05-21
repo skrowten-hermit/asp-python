@@ -30,7 +30,7 @@ cwd = os.getcwd()
 dtree = cwd.split('/')
 ltree = len(dtree)
 lroot = ltree - 3
-stpath =""
+stpath = ""
 stpath = '/'.join(dtree[:lroot])
 modpath = stpath + '/software/models/'
 sys.path.append(modpath)
@@ -46,7 +46,7 @@ N = 1024
 H = 400
 
 # Returns a frequency and an array of floating point values (from wave file)
-(fs, x) = UF.wavread(stpath + '/sounds/piano.wav')
+(fs, x) = UF.wavread(inputFile)
 print fs, x
 
 w = get_window(window_type, M)

@@ -35,8 +35,9 @@ sys.path.append(modpath)
 import utilFunctions as UF
 import dftModel as DFT
 
+inputFile = stpath + '/sounds/piano.wav'
 # Returns a frequency and an array of floating point values (from wave file)
-(fs, x) = UF.wavread(stpath + '/sounds/piano.wav')
+(fs, x) = UF.wavread(inputFile)
 print fs, x
 
 # Calculates the time array corresponding to the samples (for plotting)

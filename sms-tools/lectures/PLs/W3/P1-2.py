@@ -23,7 +23,7 @@ cwd = os.getcwd()
 dtree = cwd.split('/')
 ltree = len(dtree)
 lroot = ltree - 3
-stpath =""
+stpath = ""
 stpath = '/'.join(dtree[:lroot])
 modpath = stpath + '/software/models/'
 sys.path.append(modpath)
@@ -35,8 +35,9 @@ M = 501
 hM1 = int(math.floor((M + 1)/2))
 hM2 = int(math.floor((M/2)))
 
+inputFile = stpath + '/sounds/soprano-E4.wav'
 print hM1, hM2
-(fs, x) = UF.wavread(stpath + '/sounds/soprano-E4.wav')
+(fs, x) = UF.wavread(inputFile)
 print fs, x
 
 # We are going to take only a fragment of the wave file, equal to the window size M from the
