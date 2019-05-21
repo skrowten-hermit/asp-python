@@ -11,9 +11,16 @@ from scipy.fftpack import fft
 import sys, os, math
 
 """
-P1-1: STFT Analysis of a sound file
+P1-1: STFT Analysis/Synthesis of a sound file
 
-This program implements STFT analysis of a sound file.
+This program implements a whole STFT system for a sound file. We need to iterate over a sound x[n]
+and computing at every frame 'l'. We'll be computing frames of the sound at each frame location and
+multiplying the fragment of the sound with a window, 'w'. This way, we'll be having a sequence of 
+spectra, more specifically in this case, a complex spectra. This whole process can be undone by 
+using the inverse FFT. The inverse FFT gives us the output y[n] multiplied by window function w[n]
+as yw[n]. Then, we'll use a technique called "Overlap-add strategy" to add together all the 
+fragments together into a whole output signal y[n]. If we choose the window and hop size correctly,
+y[n] would be identical to x[n].
 
 """
 
