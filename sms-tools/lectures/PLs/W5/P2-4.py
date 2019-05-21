@@ -7,7 +7,8 @@ import matplotlib.pyplot as pltB
 import matplotlib.pyplot as pltmBX
 import matplotlib.pyplot as pltpBX
 from scipy.signal import get_window
-from scipy.fftpack import fft
+from scipy.signal import blackmanharris, triang
+from scipy.fftpack import fft, ifft
 import sys, os, math
 
 """
@@ -31,5 +32,42 @@ sys.path.append(modpath)
 
 import utilFunctions as UF
 
-bins = np.array([-4, -3, -2, -1, 0, 1, 2, 3])
-x = UF.genBhLobe(bins)
+
+inputFile = stpath + '/sounds/piano.wav'
+
+# Returns a frequency and an array of floating point values (from wave file)
+(fs, x) = UF.wavread(stpath + '/sounds/piano.wav')
+print fs, x
+
+Ns = 512
+hNs = Ns / 2
+H = Ns / 4
+M = 511
+t = -70
+window_type = 'hamming'
+w = get_window(window_type, M)
+x1 = x[.8 * fs:(.8 * fs) + M]
+mX1, pX1 = DFT.dftAnal(x1, w, N)
+ploc = UF.peakDetection(mX1, t)
+pmag = mX1[ploc]
+iploc, ipmag, ipphase = UF.peakInterp(mX1, pX1, ploc)
+ipfreq = fs * iploc / float(Ns)
+Y = UF.genSpecSines_p(ipfreq, ipmag, ipphase, Ns, fs)
+y = np.real(ifft(Y))
+
+sw = np.zeros(Ns)
+ow = triang(Ns/2)
+sw[hNs - H:hNs + H] = ow
+bh = blackmanharris(Ns)
+bh = bh / sum(bh)
+sw[hNs - H:hNs + H] = sw[hNs - H:hNs + H] / bh[hNs - H:hNs + H]
+
+yw = np.zeros(Ns)
+yw[:hNs - 1] = y[hNs + 1:]
+yw[hNs - 1:] = y[:hNs + 1]
+yw *= sw
+
+freqaxis = fs * np.arange(((Ns/2) + 1)/(float(Ns)))
+plt.plot(freqaxis, mX1)
+plt.plot(fs * iploc / Ns, ipmag, marker = 'x', linestyle = '')
+plt.show()

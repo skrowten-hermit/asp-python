@@ -30,6 +30,26 @@ sys.path.append(modpath)
 
 
 import utilFunctions as UF
+import sineModel as SM
 
-bins = np.array([-4, -3, -2, -1, 0, 1, 2, 3])
-x = UF.genBhLobe(bins)
+inputFile = stpath + '/sounds/oboe-A4.wav'
+window_type = 'hamming'
+M = 501
+N = 512
+t = -20
+minSineDur = 0.1
+maxnSines = 20
+freqDevOffset = 10
+freqDevSlope = 0.001
+H = 200
+
+fs, x = UF.wavread(inputFile)
+w = get_window(window_type, M)
+tfreq, tmag, tphase = SM.sineModelAnal(x, fs, w, N, H, t, maxnSines, minSineDur, freqDevOffset, freqDevSlope)
+
+numFrames = int(tfreq[:, 0].size)
+frmTime = H * np.arange((numFrames)/float(fs))
+tfreq[tfreq <= 0] = np.nan
+
+plt.plot(frmTime, tfreq)
+plt.show()

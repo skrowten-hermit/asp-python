@@ -11,7 +11,7 @@ from scipy.fftpack import fft
 import sys, os, math
 
 """
-P2-2: Sinusoidal analysis using genspeclines
+P2-2: Sinusoidal analysis using genspecsines
 
 This program implements additive synthesis using sinusoidal model by genspeclines.
 
@@ -31,5 +31,15 @@ sys.path.append(modpath)
 
 import utilFunctions as UF
 
-bins = np.array([-4, -3, -2, -1, 0, 1, 2, 3])
-x = UF.genBhLobe(bins)
+fs = 44100
+Ns = 512
+ipfreq = np.array([4000.0])
+ipmag = np.array([0.0])
+ipphase = np.array([0.0])
+Y = UF.genSpecSines_p(ipfreq, ipmag, ipphase, Ns, fs)
+absY = abs(Y[:Ns/2])
+absY[absY < np.finfo(float).eps] = np.finfo(float).eps
+
+freqaxis = fs * np.arange(((Ns/2) + 1)/(float(Ns)))
+plt.plot(freqaxis, 20 * np.log10(absY))
+plt.show()

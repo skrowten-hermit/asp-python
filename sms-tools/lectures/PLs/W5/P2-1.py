@@ -11,7 +11,7 @@ from scipy.fftpack import fft
 import sys, os, math
 
 """
-P2-1: Sinusoidal synthesis
+P2-1: Peak detection
 
 This program implements additive synthesis using sinusoidal model.
 

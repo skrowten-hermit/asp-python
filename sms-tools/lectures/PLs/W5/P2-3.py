@@ -7,7 +7,8 @@ import matplotlib.pyplot as pltB
 import matplotlib.pyplot as pltmBX
 import matplotlib.pyplot as pltpBX
 from scipy.signal import get_window
-from scipy.fftpack import fft
+from scipy.signal import blackmanharris, triang
+from scipy.fftpack import fft, ifft
 import sys, os, math
 
 """
@@ -31,5 +32,28 @@ sys.path.append(modpath)
 
 import utilFunctions as UF
 
-bins = np.array([-4, -3, -2, -1, 0, 1, 2, 3])
-x = UF.genBhLobe(bins)
+fs = 44100
+Ns = 512
+hNs = Ns / 2
+H = Ns / 4
+ipfreq = np.array([4000.0])
+ipmag = np.array([0.0])
+ipphase = np.array([0.0])
+Y = UF.genSpecSines_p(ipfreq, ipmag, ipphase, Ns, fs)
+y = np.real(ifft(Y))
+
+sw = np.zeros(Ns)
+ow = triang(Ns/2)
+sw[hNs - H:hNs + H] = ow
+bh = blackmanharris(Ns)
+bh = bh / sum(bh)
+sw[hNs - H:hNs + H] = sw[hNs - H:hNs + H] / bh[hNs - H:hNs + H]
+
+yw = np.zeros(Ns)
+yw[:hNs - 1] = y[hNs + 1:]
+yw[hNs - 1:] = y[:hNs + 1]
+yw *= sw
+
+# freqaxis = fs * np.arange(((Ns/2) + 1)/(float(Ns)))
+# plt.plot(freqaxis, 20 * np.log10(absY))
+# plt.show()
