@@ -50,7 +50,26 @@ H = 400
 print fs, x
 
 w = get_window(window_type, M)
+
+# The output array of magnitude spectrum, 'mX' and the output array of phase spectrum, 'pX' are
+# very large variables/arrays. They're very big matrices of values. So, mX.shape or pX.shape will
+# tell the actual dimensions of the array i.e., the number of frames and the number of samples in
+# the spectrum in the format (x, y) where 'x' is the number of frames and 'y' is the number of
+# samples. Here, each of the 'x' frames have 'y' samples. Since we use half of the FFT size, the
+# array returns half of 'N' as the sample numbers. We can access any individual frame 'n' using the
+# notation mX[n, :] or pX[n, :]. The function 'pcolormesh' plots the matrix as a 3D shape. The plot
+# is a bit different from other plots because the vertical axis or the y-axis is the time and the
+# horizontal axis or the x-axis is the frequency. So, we can transpose the matrix using 'transpose'
+# function first to plot the time on x-axis and the frequency on y-axis.
 mX, pX = STFT.stftAnal(x, fs, w, N, H)
 
-plt.plot(np.arange(0, fs / 2, fs / float(N), mX - max(mX)))
+plt.plot(x)
+plt.show()
+plt.plot(w)
+plt.show()
+plt.plot(mX[50, :])
+plt.show()
+plt.pcolormesh(mX)
+plt.show()
+plt.pcolormesh(np.transpose(mX))
 plt.show()
