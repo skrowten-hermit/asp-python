@@ -13,7 +13,9 @@ import sys, os, math
 """
 P2-1: Peak detection
 
-This program implements additive synthesis using sinusoidal model.
+This program implements additive synthesis using sinusoidal model. That is how to synthesize a sinusoid
+from the computed spectral peaks using additive synthesis in the frequency domain. We do this by 
+synthesizing the main lobes of Blackman window first and then take the inverse DFT of that.
 
 """
 
