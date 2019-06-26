@@ -32,11 +32,11 @@ sys.path.append(modpath)
 import utilFunctions as UF
 
 fs = 44100
-Ns = 512
-ipfreq = np.array([4000.0])
-ipmag = np.array([0.0])
-ipphase = np.array([0.0])
-Y = UF.genSpecSines_p(ipfreq, ipmag, ipphase, Ns, fs)
+Ns = 512 # FFT Size
+ipfreq = np.array([4000.0]) # Sinewave at 4000 Hz
+ipmag = np.array([0.0]) # Magnitude of 0 dB
+ipphase = np.array([0.0]) # Phase 0
+Y = UF.genSpecSines_p(ipfreq, ipmag, ipphase, Ns, fs) # Generates a spectrum according to the frequency, magnitude and phase
 absY = abs(Y[:Ns/2])
 absY[absY < np.finfo(float).eps] = np.finfo(float).eps
 
