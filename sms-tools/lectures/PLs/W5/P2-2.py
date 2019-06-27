@@ -36,10 +36,15 @@ Ns = 512 # FFT Size
 ipfreq = np.array([4000.0]) # Sinewave at 4000 Hz
 ipmag = np.array([0.0]) # Magnitude of 0 dB
 ipphase = np.array([0.0]) # Phase 0
+print ipfreq
+print ipmag
+print ipphase
 Y = UF.genSpecSines_p(ipfreq, ipmag, ipphase, Ns, fs) # Generates a spectrum according to the frequency, magnitude and phase
 absY = abs(Y[:Ns/2])
 absY[absY < np.finfo(float).eps] = np.finfo(float).eps
 
-freqaxis = fs * np.arange(((Ns/2) + 1)/(float(Ns)))
-plt.plot(freqaxis, 20 * np.log10(absY))
+# Plots main lobe of a sinusoid at frequency 4000 Hz
+freqaxis = fs * np.arange((Ns/2))/(float(Ns))
+mdB = 20 * np.log10(absY) # Shifted exactly to have a center around 4000 Hz
+plt.plot(freqaxis, mdB)
 plt.show()
