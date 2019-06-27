@@ -55,7 +55,7 @@ ploc = UF.peakDetection(mX1, t) # Peak detection
 pmag = mX1[ploc]
 iploc, ipmag, ipphase = UF.peakInterp(mX1, pX1, ploc) # Using interpolation to get more accurate value of the location of peaks in the sinusoid
 ipfreq = fs * iploc / float(Ns)
-Y = UF.genSpecSines_p(ipfreq, ipmag, ipphase, Ns, fs) # Synthesis in frequency domain
+Y = UF.genSpecSines_p(ipfreq, ipmag, ipphase, Ns, fs) # Synthesis in frequency domain after obtaining the frequency, magnitude, and phase from peakInterp()
 y = np.real(ifft(Y))
 
 sw = np.zeros(Ns)
@@ -77,6 +77,12 @@ yw *= sw
 # plt.plot(freqaxis, mX1)
 # plt.plot(fs * iploc / Ns, ipmag, marker = 'x', linestyle = '')
 
+# Plots the zero-centred inverse FFT of all the sinusoids in the input sound above.
 plt.plot(y)
+
+# Plots the output multiplied by the synthesis window - after re-centering and undoing the Blackman-
+# Harris window and then applying the triangular function. This is the one we'll be using in the
+# overlap part of the analysis-synthesis of the sound.
 # plt.plot(yw)
+
 plt.show()
