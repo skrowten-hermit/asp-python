@@ -83,7 +83,7 @@ def process_wav_file(wav_file, recorded, out_text_path, debug):
 # *-----------------------------------------------------------------------------------------------------------------------------------------
 
 
-def speech_compare(in_wav_file , rec_wav_file, COUNTER_MAIN, out_files_path, out_graph_path, debug):
+def speech_compare(in_wav_file , rec_wav_file, COUNTER_MAIN, out_files_path, debug):
 
     pitch_count_orig, pitch_val_orig, pitch_sum_orig, pitch_len_orig, inwav_rms = process_wav_file(in_wav_file, 0, out_files_path, debug)
     pitch_count_rec, pitch_val_rec, pitch_sum_rec, pitch_len_rec, recwav_rms = process_wav_file(rec_wav_file, 1, out_files_path, debug)
