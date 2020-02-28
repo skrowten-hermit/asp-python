@@ -470,12 +470,12 @@ if __name__ == '__main__':
                 freq = int(arg)
     else:
         # freq = 48000
-        # drec1 = "/home/sreekanth/Programs/asp-python/Input/DTMF/SWB_OPUS_celt_b1_b2.wav"
-        # drec2 = "/home/sreekanth/Programs/asp-python/Input/DTMF/SWB_OPUS_celt_b2_b1.wav"
+        # drec1 = "/home/sreekanth/Programs/asp-python/input/DTMF/SWB_OPUS_celt_b1_b2.wav"
+        # drec2 = "/home/sreekanth/Programs/asp-python/input/DTMF/SWB_OPUS_celt_b2_b1.wav"
 
         freq = 16000
-        drec1 = "/home/sreekanth/Programs/asp-python/Input/DTMF/WB_G722_b1_b2.wav"
-        drec2 = "/home/sreekanth/Programs/asp-python/Input/DTMF/WB_G722_b2_b1.wav"
+        drec1 = "/home/sreekanth/Programs/asp-python/input/DTMF/WB_G722_b1_b2.wav"
+        drec2 = "/home/sreekanth/Programs/asp-python/input/DTMF/WB_G722_b2_b1.wav"
 
         filelist = [drec1, drec2]
 

@@ -50,7 +50,7 @@ two or more sub-graphs created from various plots implemented in WavGraphPlot.
 
 
 class WavPlotStdCanvas:
-    def __init__(self, source, sink, opath, debug=0):
+    def __init__(self, graphrows, graphcols, debug=0):
         self.in_wav = source
         self.rec_wav = sink
         self.curr_wav = source
@@ -149,9 +149,9 @@ class WavPlotStdCanvas:
 ##save_file="C:\\automation\Voice_Test_Tool\Output\\"
 ##
 ##if int(sys.argv[1])==0:
-##    o_file='C:\\automation\Voice_Test_Tool\Input\sirtest_nb.wav'
+##    o_file='C:\\automation\Voice_Test_Tool\input\sirtest_nb.wav'
 ##else:
-##    o_file='C:\\automation\Voice_Test_Tool\Input\sirtest_wb_63.wav'
+##    o_file='C:\\automation\Voice_Test_Tool\input\sirtest_wb_63.wav'
 ##
 ##r_file='C:\\automation\Voice_Test_Tool\Output\SIR_TEST_REC.0.wav'
 ##

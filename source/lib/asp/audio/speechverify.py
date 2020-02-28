@@ -16,9 +16,7 @@
 
 
 
-import wave
 import os
-import string
 import time
 import gc
 import getopt
@@ -27,8 +25,7 @@ import numpy
 from math import sqrt
 from numpy.fft import fft
 
-import lib.asp.plot.wavgraphplot as GP
-from  lib.generic.globalutils import *
+from lib.generic.globalutils import *
 
 from Tkinter import*
 import tkSnack
@@ -38,7 +35,7 @@ import tkSnack
 """
 SpeechVerify is a utility to verify the presence of speech on a given file with respect to a source file using 'tksnack'
 library.
-NOTE: LEGACY CODE. NOT IDEAL AND EFFICIENT.
+NOTE: speechAnalysis() IS LEGACY CODE. NOT IDEAL AND EFFICIENT.
 """
 
 
@@ -87,7 +84,11 @@ class SpeechVerify:
         corr = numpy.correlate(orig, rec, 'full')
         delay = int(len(corr) / 2) - numpy.argmax(corr)
         if self.DEBUG == 1:
-            print "Delay = ", delay
+            print "\n\n"
+            print "input file = ", self.inwav
+            print "Output file = ", self.recwav
+            print "\n\nDelay = ", delay
+            print "\n\n"
         return delay
 #*----------------------------------------------------------------------------------------------------------------------
 
@@ -113,7 +114,13 @@ class SpeechVerify:
                 if self.DEBUG == 1:
                     print "\nKeyword error, using default values...."
 
-        ##  Processing Original/Input Wave File
+        if self.DEBUG == 1:
+            print "\n\n"
+            print "input file = ", self.inwav
+            print "Output file = ", self.recwav
+            print "\n\n"
+
+        ##  Processing Original/input Wave File
 
         source = tkSnack.Sound()
         source.read(self.inwav)
@@ -122,7 +129,7 @@ class SpeechVerify:
         source_pitchsum = 0
         temp_count = 0
 
-        ## Pitch Calculation, Pitch Text Write of Input Wave File
+        ## Pitch Calculation, Pitch Text Write of input Wave File
 
         while temp_count < source_pitchlen:
             source_pitchsum = source_pitchsum + source_pitchvals[temp_count]
@@ -130,7 +137,7 @@ class SpeechVerify:
         source_pitchcnt = source_pitchsum/temp_count
         source_pitchcount, source_pitchvalues = self._pitchResult(source_pitchlen, source_pitchvals, 0)
 
-        ## RMS calculation of FFT of Input Wave file
+        ## RMS calculation of FFT of input Wave file
 
         source_raw_fft = fft(source_pitchvals)
         source_fft_values = abs(source_raw_fft)
@@ -162,7 +169,7 @@ class SpeechVerify:
             sink_pitchcnt = sink_pitchsum / temp_count
             sink_pitchcount, sink_pitchvalues = self._pitchResult(sink_pitchlen, sink_pitchvals, 1)
 
-            ## RMS calculation of FFT of Input Wave file
+            ## RMS calculation of FFT of input Wave file
 
             sink_raw_fft = fft(sink_pitchvals)
             sink_fft_values = abs(sink_raw_fft)
@@ -176,8 +183,8 @@ class SpeechVerify:
             if self.DEBUG == 1:
                 print "Output Pitch Count = ", sink_pitchcount
                 print "Output Pitch Value = ", sink_pitchvalues
-                print "Input Pitch Count = ", source_pitchcount
-                print "Input Pitch Value = ", source_pitchvalues
+                print "input Pitch Count = ", source_pitchcount
+                print "input Pitch Value = ", source_pitchvalues
 
             ## Modified to last 50 pitch values from last 100 values
 
@@ -282,8 +289,8 @@ class SpeechVerify:
             result_file.write("\t\t\t\tFail\n")
             result_file.close()
 
-        out_graphs = GP.graph_plot(self.inwav, self.recwav, self.outpath)
-        out_graphs.wav_plot_compare(1)
+        # out_graphs = GP.graph_plot(self.inwav, self.recwav, self.outpath)
+        # out_graphs.wav_plot_compare(1)
 
         sink.destroy()
     ##    root.destroy()
@@ -418,8 +425,8 @@ class SpeechVerify:
                         in_pitch_count = count_pitch
                         in_pitch_value = pitchvalues[count_pitch]
                         if self.DEBUG == 1:
-                            print "Input pitch count    :: ", in_pitch_count
-                            print "Input Pitch Value    :: ", in_pitch_value
+                            print "input pitch count    :: ", in_pitch_count
+                            print "input Pitch Value    :: ", in_pitch_value
                     elif recorded == 1:
                         out_pitch_count = count_pitch
                         out_pitch_value = pitchvalues[count_pitch]
@@ -491,7 +498,7 @@ def usage():
 ##
 ##while iter<100:
 ##    DEBUG=1
-##    sin='C:\\automation\Voice_Test_Tool\Input\sirtest.wav'
+##    sin='C:\\automation\Voice_Test_Tool\input\sirtest.wav'
 ##    sout='C:\\automation\Voice_Test_Tool\Output\SIR_TEST_REC.1.wav'
 ##    outdir="C:\\automation\Voice_Test_Tool\Output\\"
 ##    outdir="C:\\automation\Voice_Test_Tool\Output\\"
@@ -504,17 +511,19 @@ def usage():
 if __name__ == '__main__':
     print "\n\n" + 120 * "%" + "\n\n\t\t\t\t\tProgram to verify speech/audio\n\n" + 120 * "%" + "\n\n"
 
+    srccpath = '/home/sreekanth/automation_v5/automation/voip/dvf-automation/input/audio/'
+
+    svold = SpeechVerify(debug=1)
+    svold.inwav = srccpath + 'male_8k.wav'
+    svold.recwav = "output.wav"
+
     environset = 0
     for ppath in ((os.environ['PYTHONPATH']).split(':')):
-        if "/automation/voip_automation/DVF_Automation/" in ppath:
+        if "/automation/voip/dvf-automation/" in ppath:
             svold.outpath = ppath + 'tools/'
             environset = 1
     if environset == 0:
         print "PYTHONPATH not set!!!"
-
-    svold = SpeechVerify(debug=1)
-    svold.inwav = ""
-    svold.recwav = ""
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hi:o:", ["infile", "outfile"])
@@ -523,8 +532,7 @@ if __name__ == '__main__':
         sys.exit(-1)
 
     svold.outpath = ''
-    srccpath = '/home/sreekanth/automation_v5/automation/voip_automation/DVF_Automation/Input/audio/'
-    outpath = os.curdir()
+    outpath = os.curdir
 
     if len(opts) != 0:
         for opt, arg in opts:
@@ -537,19 +545,21 @@ if __name__ == '__main__':
                 svold.recwav = arg
 
         svold.calcDelay()
-        svold.calcDelay("", "")
-        svold.calcDelay(infile="", outfile="")
+        svold.calcDelay(srccpath + 'male_48k.wav')
+        svold.calcDelay(srccpath + 'male_8k.wav', "output_16k.wav")
+        svold.calcDelay(infile=srccpath + 'male_8k_short.wav', outfile="output.wav")
 
         svold.speechAnalysis()
-        svold.speechAnalysis("", "")
-        svold.speechAnalysis(infile="", outfile="")
+        svold.speechAnalysis(srccpath + 'male_48k.wav')
+        svold.speechAnalysis(srccpath + 'male_8k.wav', "output_16k.wav")
+        svold.speechAnalysis(infile=srccpath + 'male_8k_short.wav', outfile="output.wav")
     else:
         svold.calcDelay()
-        svold.calcDelay("", "")
-        svold.calcDelay(infile="", outfile="")
+        svold.calcDelay(srccpath + 'male_16k.wav', "output_16k.wav")
+        svold.calcDelay(infile=srccpath + 'male_16k.wav', outfile="NB_PCMA_b1_b2.wav")
 
         svold.speechAnalysis()
-        svold.speechAnalysis("", "")
-        svold.speechAnalysis(infile="", outfile="")
+        svold.speechAnalysis(srccpath + 'male_16k.wav', "output_16k.wav")
+        svold.speechAnalysis(outfile="NB_PCMA_b2_b1.wav", infile=srccpath + 'male_16k.wav')
 
     print "\n\n" + 120 * "%" + "\n\n\t\t\t\t\tProgram to verify speech/audio\n\n" + 120 * "%" + "\n\n"

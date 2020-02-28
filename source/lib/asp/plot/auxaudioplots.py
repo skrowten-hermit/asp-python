@@ -41,7 +41,7 @@ import string
 from lib.generic.globalutils import *
 
 
-# TODO: Compare and add usable fucntions or statements to wavgraphplot.py and remove this file.
+# TODO: Compare and add usable fucntions or statements to graphplot.py and remove this file.
 
 
 class graph_plot:
@@ -473,9 +473,9 @@ class graph_plot:
 ##save_file="C:\\automation\Voice_Test_Tool\Output\\"
 ##
 ##if int(sys.argv[1])==0:
-##    o_file='C:\\automation\Voice_Test_Tool\Input\sirtest_nb.wav'
+##    o_file='C:\\automation\Voice_Test_Tool\input\sirtest_nb.wav'
 ##else:
-##    o_file='C:\\automation\Voice_Test_Tool\Input\sirtest_wb_63.wav'
+##    o_file='C:\\automation\Voice_Test_Tool\input\sirtest_wb_63.wav'
 ##
 ##r_file='C:\\automation\Voice_Test_Tool\Output\SIR_TEST_REC.0.wav'
 ##

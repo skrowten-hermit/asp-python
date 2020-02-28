@@ -50,6 +50,26 @@ class AudioPrism:
         self.DEBUG = debug
 #*----------------------------------------------------------------------------------------------------------------------
 
+# Compare frequency.
+
+    def frequencyCompare(self):
+        # remove pylab functions and replace with pyplot
+        data_size = 40000
+        wav_file = wave.open(self.wav_file, 'r')
+        data = wav_file.readframes(data_size)
+        wav_file.close()
+        data = struct.unpack('{n}h'.format(n=data_size), data)
+        data = numpy.array(data)
+        w = numpy.fft.fft(data)
+        freqs = numpy.fft.fftfreq(len(w))
+        # print "Min & Max=", freqs.min(), freqs.max()
+        # Find the peak in the coefficients
+        idx = numpy.argmax(numpy.abs(w))
+        freq = freqs[idx]
+        freq_in_hertz = abs(freq * self.rate)
+        print"freq_in_hertz=", freq_in_hertz
+#*----------------------------------------------------------------------------------------------------------------------
+
 # Get the gain levels of the source and the sink.
 
     def inoutGainLevels(self):
@@ -178,7 +198,7 @@ SNR()
 
 
 if __name__ == '__main__':
-    fn = '/home/sreekanth/Programs/Input/Speech/male_8k_wclick.wav'
+    fn = '/home/sreekanth/Programs/input/Speech/male_8k_wclick.wav'
     tL = AudioPrism(0, fn, '', '', 0)
     audioSam = tL.audio_loader(fn)
 

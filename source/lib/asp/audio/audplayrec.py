@@ -758,7 +758,7 @@ if __name__ == '__main__':
     numrec = 2
 
     plrec = SYSPlayRecord(debug=1)
-    plrec.playpath = homedir + '/automation_v5/automation/voip_automation/DVF_Automation/Input/audio/'
+    plrec.playpath = homedir + '/automation_v5/automation/voip/dvf-automation/input/audio/'
     plrec.playwav = plrec.playpath + 'male_8k.wav'
     plrec.recpath = homedir + '/Downloads/wav_out/'
     plrec.outwav = 'output.wav'

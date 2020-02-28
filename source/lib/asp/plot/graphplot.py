@@ -3,7 +3,7 @@
 
 ########################################################################################################################
 ########################################################################################################################
-## File              :: lib/asp/plot/wavgraphplot.py
+## File              :: lib/asp/plot/graphplot.py
 ## Description       :: VoIP Automation Common API : Plots graphs of the output speech files for analysis.
 ## Developer         :: Sreekanth S
 ## Version           :: v1.0
@@ -42,8 +42,8 @@ from lib.generic.globalutils import *
 
 
 """
-WavGraphPlot contains functions to plot different types of graphs, which can be directly plotted or added to a bigger
-plot as sub-graphs.
+WavGraphPlot contains functions to plot different types of graphs, specific to audio or speech extracted from .wav files 
+which can be directly plotted or added to a bigger plot as sub-graphs.
 """
 
 
@@ -79,14 +79,15 @@ class WavGraphPlot:
 
 # Read data from a given wav file.
 
-    def readWavFile(self, wavfile):
+    def _readWavFile(self, wavfile):
         self.samplerate, self.wavdata = readWav(wavfile)
         self.wavdlen = len(self.wavdata)
         self.curr_wav = wavfile
-#*-----------------------------------------------------------------------------------------------------------------------------------------
+#*----------------------------------------------------------------------------------------------------------------------
 
+# Plots the pitch graph - amplitude (normalized numerical value) vs time (seconds) of a given .wav file.
 
-    def plotWavAmplLev(self, subgraph):
+    def plotWavAmplLevTime(self, subgraph):
         if self.DEBUG == 1:
             print "Printing Signal graph (amplitude vs seconds)...."
         s = self.wavdata.dtype
@@ -105,8 +106,9 @@ class WavGraphPlot:
         subgraph.set_ylabel('Numerical level')
         if self.DEBUG == 1:
             print "Waveform of " + str(title) + " plotted...."
-#*-----------------------------------------------------------------------------------------------------------------------------------------
+#*----------------------------------------------------------------------------------------------------------------------
 
+# Plots the power spectral density graph - power (dB) vs frequency (Hz) of a given .wav file.
 
     def plotSpectralDensity(self, subgraph):
         if self.DEBUG == 1:
@@ -128,8 +130,9 @@ class WavGraphPlot:
         gc.collect()
         if self.DEBUG == 1:
             print "Spectral Density (dB vs Hz) of " + str(title) + " plotted...."
-#*-----------------------------------------------------------------------------------------------------------------------------------------
+#*----------------------------------------------------------------------------------------------------------------------
 
+# Plots the spectrogram - frequency (Hz) vs time (seconds) of a given .wav file.
 
     def plotSpectrogram(self, subgraph):
         if self.DEBUG == 1:
@@ -151,32 +154,7 @@ class WavGraphPlot:
             print "Spectrogram (kHz vs seconds) of " + str(title) + " plotted...."
 #*----------------------------------------------------------------------------------------------------------------------
 
-
-    def plotMOSGraph(self, res_dic):
-        #main_control_1100_spcli
-        # remove pylab functions and replace with pyplot
-        N = len(res_dic)
-        cmap = pylab.cm.get_cmap("hsv", N + 1)
-        save_file = self.out_dir + "RESULT_MOS.png"
-        pylab.subplot()
-        for n in res_dic:
-            tik=len(res_dic[n])
-            pylab.plot(range(len(res_dic[n])),res_dic[n], label=n, color=cmap(N))
-            N-=1
-        pylab.xticks(range(tik))
-        pylab.legend(loc='best')
-
-        pylab.xlabel('Iteration')
-        pylab.ylabel('MOS Score')
-        print "MOS Plot Done...."
-
-        pylab.savefig(save_file, bbox_inches='tight', dpi=250)
-        pylab.gcf()
-        pylab.gca()
-        pylab.close('all')
-        gc.get_referrers()
-        gc.collect()
-
+# Plots the spectrogram - frequency (Hz) vs time (seconds) of a given .wav file.
 
     def plotChirpGraph(self, idraw, orig_file, rec_file, OUTPUT_GRAPH_FILES, seq, chirp):
         # remove pylab functions and replace with pyplot
@@ -201,69 +179,6 @@ class WavGraphPlot:
             rs, ra = self.draw.user_graph_2()
 
         return  rs, ra
-
-
-    def plotMemoryGraph(self, mem_values,OUTPUT_GRAPH_FILES):
-        # remove pylab functions and replace with pyplot
-        pylab.plot(range(len(mem_values)), mem_values)
-        pylab.xlabel('Count')
-        pylab.ylabel('Value in KB')
-        pylab.tick_params(axis='x', labelsize=8)
-        pylab.tick_params(axis='y', labelsize=8)
-        pylab.xticks(rotation=0)
-        save_file = OUTPUT_GRAPH_FILES + 'MEM_PLOT_RESULT.png'
-        pylab.savefig(save_file)
-        print "Mem Graph Plot done"
-
-
-    def frequencyCompare(self):
-        # remove pylab functions and replace with pyplot
-        data_size = 40000
-        wav_file = wave.open(self.wav_file, 'r')
-        data = wav_file.readframes(data_size)
-        wav_file.close()
-        data = struct.unpack('{n}h'.format(n=data_size), data)
-        data = np.array(data)
-        w = np.fft.fft(data)
-        freqs = np.fft.fftfreq(len(w))
-        # print "Min & Max=", freqs.min(), freqs.max()
-        # Find the peak in the coefficients
-        idx = np.argmax(np.abs(w))
-        freq = freqs[idx]
-        freq_in_hertz = abs(freq * self.rate)
-        # print"freq_in_hertz=", freq_in_hertz
-
-
-    def plotPitchGraph(self, pitch_length, pitch_values, recorded):
-# This program creats graph of pitch values.
-        # remove pylab functions and replace with pyplot
-        t = arange(0, pitch_length, 1)
-        ax = fig.add_subplot(3, 2, self.graphloc)
-        ax.plot(t, pitch_values)
-        grid("on")
-        xlabel('Time (in ms)')
-        ylabel('Pitch Values')
-        axis('tight')
-
-        if recorded == 1:
-            title('Original')
-        else:
-            title('Recorded')
-        return
-#*----------------------------------------------------------------------------------------------------------------------
-
-
-    def plotPowerGraph(self, power_length, power_values):
-# This program creats graph of power values.
-        # remove pylab functions and replace with pyplot
-        t = arange(0, power_length, 1)
-        bx = fig.add_subplot(3, 2, self.graphloc)
-        bx.plot(t, power_values)
-        grid("on")
-        xlabel('Power Length')
-        ylabel('Power (in dB)')
-        axis('tight')
-        return
 #*----------------------------------------------------------------------------------------------------------------------
 
 
@@ -326,13 +241,89 @@ class WavGraphPlot:
 
 
 
+"""
+GenGraphPlot contains functions to plot different types of generic graphs for visualization, which can be directly 
+plotted or added to a bigger plot as sub-graphs.
+"""
+
+
+
+class GenGraphPlot:
+    def __init__(self, source, sink, outpath, debug=0):
+        self.inwav = source
+        self.recwav = sink
+        self.currwav = source
+        self.outdir = outpath
+        self.wavdata = []
+        self.wavdlen = 0
+        self.wavbitdepth = 8
+        self.samplerate = 8000
+        self.freq = []
+
+        self.graphloc = 1      #The coordinate of canvas where it has to plot the graph.
+        self.final_match = []
+        self.origfreqresult = []
+        self.origpowerresult = []
+        self.orig_frq_bup = []
+        self.ori_list = []
+        self.fre_list = []
+        self.pow_list = []
+        self.orig_max_frq = 0
+        self.DEBUG = debug
+
+        # if self.debug:
+        #     self.graph_cnt=4
+        # else:
+        #     self.graph_cnt=3
+#*----------------------------------------------------------------------------------------------------------------------
+
+
+    def plotMOSGraph(self, res_dic):
+        #main_control_1100_spcli
+        # remove pylab functions and replace with pyplot
+        N = len(res_dic)
+        cmap = pylab.cm.get_cmap("hsv", N + 1)
+        save_file = self.out_dir + "RESULT_MOS.png"
+        pylab.subplot()
+        for n in res_dic:
+            tik=len(res_dic[n])
+            pylab.plot(range(len(res_dic[n])),res_dic[n], label=n, color=cmap(N))
+            N-=1
+        pylab.xticks(range(tik))
+        pylab.legend(loc='best')
+
+        pylab.xlabel('Iteration')
+        pylab.ylabel('MOS Score')
+        print "MOS Plot Done...."
+
+        pylab.savefig(save_file, bbox_inches='tight', dpi=250)
+        pylab.gcf()
+        pylab.gca()
+        pylab.close('all')
+        gc.get_referrers()
+        gc.collect()
+#*----------------------------------------------------------------------------------------------------------------------
+
+
+    def plotMemoryGraph(self, mem_values,OUTPUT_GRAPH_FILES):
+        # remove pylab functions and replace with pyplot
+        pylab.plot(range(len(mem_values)), mem_values)
+        pylab.xlabel('Count')
+        pylab.ylabel('Value in KB')
+        pylab.tick_params(axis='x', labelsize=8)
+        pylab.tick_params(axis='y', labelsize=8)
+        pylab.xticks(rotation=0)
+        save_file = OUTPUT_GRAPH_FILES + 'MEM_PLOT_RESULT.png'
+        pylab.savefig(save_file)
+        print "Mem Graph Plot done"
+#*----------------------------------------------------------------------------------------------------------------------
 ##iter=0
 ##save_file="C:\\automation\Voice_Test_Tool\Output\\"
 ##
 ##if int(sys.argv[1])==0:
-##    o_file='C:\\automation\Voice_Test_Tool\Input\sirtest_nb.wav'
+##    o_file='C:\\automation\Voice_Test_Tool\input\sirtest_nb.wav'
 ##else:
-##    o_file='C:\\automation\Voice_Test_Tool\Input\sirtest_wb_63.wav'
+##    o_file='C:\\automation\Voice_Test_Tool\input\sirtest_wb_63.wav'
 ##
 ##r_file='C:\\automation\Voice_Test_Tool\Output\SIR_TEST_REC.0.wav'
 ##

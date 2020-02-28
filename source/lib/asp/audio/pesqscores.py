@@ -35,7 +35,7 @@ class ITUTPESQ:
     def __init__(self, debug=0):
         environset = 0
         for ppath in ((os.environ['PYTHONPATH']).split(':')):
-            if "/automation/voip_automation/DVF_Automation/" in ppath:
+            if "/automation/voip/dvf-automation/" in ppath:
                 self.path = ppath + 'tools/'
                 environset = 1
         if environset == 0:
@@ -191,7 +191,7 @@ if __name__ == '__main__':
     except getopt.GetoptError:
         usage()
 
-    srcpath = '/home/sreekanth/automation_v5/automation/voip_automation/DVF_Automation/Input/audio/'
+    srcpath = '/home/sreekanth/automation_v5/automation/voip/dvf-automation/input/audio/'
 
     if len(opts) != 0:
         for opt, arg in opts:

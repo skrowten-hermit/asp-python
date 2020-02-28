@@ -525,7 +525,7 @@ class ImageBurn:
         # if "NULL" not in str(result):
         #     num=base_comp.split("M")[1]
         #     print "num=",num
-        #     string = "ttermpro.exe /C="+str(int(num))+" /BAUD=115200 /M=C://automation/DVF99_Automation/Scripts/sunBurn.TTL; exit 0"
+        #     string = "ttermpro.exe /C="+str(int(num))+" /BAUD=115200 /M=C://automation/DVF99_Automation/scripts/sunBurn.TTL; exit 0"
         #     print "String = ",string
         #     try:
         #         p=subprocess.Popen(string, shell=True)

@@ -4,7 +4,7 @@
 ########################################################################################################################
 ########################################################################################################################
 ## File              :: lib/generic/globalutils.py
-## Description       :: VoIP Automation Common API : All the generic independent global functions not native to SDK.
+## Description       :: VoIP Automation Common API : All the generic independent global functions not native to sdk.
 ## Developer         :: Sreekanth S
 ## Version           :: v2.0
 ## Release Date      :: 08/04/2019
@@ -48,7 +48,7 @@ def checkkeywords(kwlist, validargs):
 # Pad a given hexadecimal number with leading 0s.
 
 def hexpad(hexin):
-    print "Input Hex : ", hexin
+    print "input Hex : ", hexin
     print "Converting hex to writable form...."
     resulthex = "{0:#0{1}x}".format(hexin, 10).split('x')[1]
     return resulthex
@@ -108,7 +108,7 @@ def hextranslate(inval):
         hexin = hex(int(inval, 16))
     else:
         hexin = inval
-    print "Input in hex = ", hexin
+    print "input in hex = ", hexin
     hexresult = str(hexin).split('x')[1]
     return hexresult
 #*----------------------------------------------------------------------------------------------------------------------
@@ -133,7 +133,7 @@ def makehexmask(nbits, lsb):
 # Return Hexadecimal byte from a given hex number.
 
 def hexbyte(hexin):
-    print "Input hex number : ", hexin
+    print "input hex number : ", hexin
     binnum = hextobin(hexin)
     hbyte = '{:0{}x}'.format(int(binnum, 2), len(binnum) / 4)
     return hbyte
